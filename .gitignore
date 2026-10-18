@@ -218,3 +218,26 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- Project-specific (T01) ---
+# Real secrets (keep .env.example versioned)
+.env.*
+!.env.example
+*.pem
+*.key
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+
+# Private / real business data and sensitive logs (synthetic data under data/ stays versioned)
+data/private/
+data/raw/
+data/real/
+*.xlsx
+!data/**/synthetic*.xlsx
+logs/
+*.log
