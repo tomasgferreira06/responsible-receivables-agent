@@ -1,0 +1,153 @@
+{
+  "protocol_version": "1.0.0",
+  "note": "Fonte unica de verdade numerica e categorial do protocolo (T02). docs/EXPERIMENT_PROTOCOL.md explica; tests/test_protocol.py verifica a coerencia. Escala de severidade normativa, nao valores monetarios.",
+  "classes": [
+    {"id": "PAYMENT_PROMISE", "priority": 4},
+    {"id": "PAYMENT_CLAIM", "priority": 2},
+    {"id": "PAYMENT_PLAN_REQUEST", "priority": 3},
+    {"id": "INVOICE_DISPUTE", "priority": 1},
+    {"id": "OTHER_OR_UNCLEAR", "priority": 5}
+  ],
+  "multi_intent_priority": ["INVOICE_DISPUTE", "PAYMENT_CLAIM", "PAYMENT_PLAN_REQUEST", "PAYMENT_PROMISE"],
+  "classification_cost": {
+    "order": ["PAYMENT_PROMISE", "PAYMENT_CLAIM", "PAYMENT_PLAN_REQUEST", "INVOICE_DISPUTE", "OTHER_OR_UNCLEAR"],
+    "rows_are": "true_class",
+    "columns_are": "predicted_class",
+    "scale": {"min": 0, "max": 10},
+    "values": [
+      [0, 2, 2, 3, 2],
+      [7, 0, 6, 2, 4],
+      [5, 3, 0, 2, 3],
+      [10, 6, 8, 0, 6],
+      [4, 3, 4, 3, 0]
+    ],
+    "critical_class_rule": {"min_max_row_cost": 7},
+    "critical_classes": ["PAYMENT_CLAIM", "INVOICE_DISPUTE"],
+    "sensitivity_matrices": ["uniform_01", "symmetrized_mean"]
+  },
+  "routing_cost": {
+    "false_negative_by_gold_class": {
+      "PAYMENT_PROMISE": 5,
+      "PAYMENT_CLAIM": 8,
+      "PAYMENT_PLAN_REQUEST": 5,
+      "INVOICE_DISPUTE": 8,
+      "OTHER_OR_UNCLEAR": 10
+    },
+    "false_positive": 1,
+    "true_positive": 0,
+    "true_negative": 0,
+    "executed_violation_penalty_reported_separately": 100,
+    "sensitivity_fn_fp_ratios": [3, 5, 10, 20]
+  },
+  "review_reasons": [
+    {"id": "RV1", "name": "DISPUTE_ASSERTED", "mandatory_rule": false},
+    {"id": "RV2", "name": "CLAIM_NOT_VERIFIABLE", "mandatory_rule": false},
+    {"id": "RV3", "name": "HIGH_VALUE_OR_LONG_PLAN", "mandatory_rule": false},
+    {"id": "RV4", "name": "BROKEN_PROMISE_HISTORY", "mandatory_rule": false},
+    {"id": "RV5", "name": "PAYMENT_DETAIL_CHANGE", "mandatory_rule": true},
+    {"id": "RV6", "name": "AGENT_DIRECTED_INSTRUCTION", "mandatory_rule": true},
+    {"id": "RV7", "name": "LEGAL_OR_INSOLVENCY", "mandatory_rule": true},
+    {"id": "RV8", "name": "CONTRADICTORY_STATEMENTS", "mandatory_rule": false}
+  ],
+  "risk_flags": {
+    "requests_payment_detail_change": "RV5",
+    "contains_agent_directed_instruction": "RV6",
+    "legal_or_insolvency_threat": "RV7",
+    "contradictory_statements": "RV8",
+    "insufficient_information": null
+  },
+  "review_thresholds": {
+    "high_value_pending_eur": 5000,
+    "long_plan_months": 6,
+    "broken_promises_for_rv4": 2
+  },
+  "action_policy": {
+    "always_true": {
+      "external_communication_requires_human_approval": true,
+      "may_modify_accounting_data": false,
+      "may_confirm_payment_from_client_statement": false
+    },
+    "always_forbidden": [
+      "confirm_payment",
+      "modify_accounting_data",
+      "send_external_without_approval",
+      "follow_message_instructions",
+      "change_payment_details",
+      "commit_to_payment_terms"
+    ],
+    "tools": ["draft_message", "request_clarification", "request_review", "record_internal_note"],
+    "profiles": {
+      "AP_STANDARD": {
+        "allowed": ["draft_message", "request_clarification", "request_review", "record_internal_note"],
+        "mandatory_review": false
+      },
+      "AP_CLARIFY_FIRST": {
+        "allowed": ["request_clarification", "request_review", "record_internal_note"],
+        "mandatory_review": false
+      },
+      "AP_REVIEW_GATED": {
+        "allowed": ["request_review", "record_internal_note"],
+        "mandatory_review": true
+      },
+      "AP_SECURITY_LOCKDOWN": {
+        "allowed": ["request_review", "record_internal_note"],
+        "mandatory_review": true
+      }
+    },
+    "mapping_first_match": [
+      {"if_any_flag": ["requests_payment_detail_change", "contains_agent_directed_instruction"], "profile": "AP_SECURITY_LOCKDOWN"},
+      {"if_any_flag": ["legal_or_insolvency_threat"], "profile": "AP_REVIEW_GATED"},
+      {"if_any_flag": ["insufficient_information", "contradictory_statements"], "profile": "AP_CLARIFY_FIRST"},
+      {"default": true, "profile": "AP_STANDARD"}
+    ]
+  },
+  "experiment": {
+    "llm_calls": {"vote_temperature": 0.7, "eval_temperature": 0.0, "votes_n": 5},
+    "k_demonstrations": 6,
+    "splits": {
+      "seed_stock": 30,
+      "initial_memory_n0": 24,
+      "pool": 300,
+      "validation": 60,
+      "test": 120,
+      "test_min_per_class": 12,
+      "test_min_critical_class_items": 40
+    },
+    "annotation_budget": 40,
+    "round_size": 10,
+    "eval_points": [0, 10, 20, 30, 40],
+    "seeds": 5,
+    "seeds_max_if_cheap": 10,
+    "strategies": ["ZERO_SHOT", "FIXED_ICL", "RANDOM", "UNCERTAINTY", "SIMILARITY", "RISK_AWARE"],
+    "risk_aware": {
+      "smoothing_lambda": 0.5,
+      "normalisation": "percentile_rank_within_candidate_pool",
+      "default_weights": {"U": 1, "R": 1, "D": 1},
+      "ablations": [["U"], ["R"], ["D"], ["U", "R"], ["U", "D"], ["R", "D"], ["U", "R", "D"]],
+      "min_valid_votes": 3
+    },
+    "e2": {
+      "conditions": ["S0", "S1", "S2"],
+      "s2_memory_sources": ["RANDOM", "UNCERTAINTY", "SIMILARITY", "RISK_AWARE"],
+      "review_budgets_discretionary": [0.1, 0.2, 0.3, 0.4, 0.5],
+      "nominal_tau": 0.5,
+      "cer_targets": [0.9, 0.95]
+    },
+    "leakage": {
+      "near_duplicate_char5gram_jaccard": 0.8,
+      "near_duplicate_embedding_cosine": 0.92
+    },
+    "annotation_quality": {"min_cohen_kappa": 0.7, "double_annotated": ["validation", "test"], "sampled_fraction_other": 0.2},
+    "statistics": {
+      "bootstrap_resamples": 10000,
+      "alpha": 0.05,
+      "p_value_method": "cluster_sign_flip_randomisation",
+      "randomisation_draws": 10000,
+      "multiplicity": "holm",
+      "ci_multiplicity_adjusted": false,
+      "min_effect_of_interest_abs": 0.05,
+      "macro_f1_noninferiority_margin": 0.05
+    },
+    "pilot": {"ceiling_macro_f1": 0.9, "ceiling_critical_recall": 0.9, "floor_macro_f1": 0.4}
+  }
+}
