@@ -1,4 +1,4 @@
-"""Integrity checks for the T02 research protocol artefacts (offline, no LLM calls)."""
+"""Integrity checks for the research protocol artefacts (offline, no LLM calls)."""
 
 import json
 import math
@@ -22,15 +22,10 @@ MATRIX: list[list[float]] = COST["values"]
 OTHER = "OTHER_OR_UNCLEAR"
 POLICY: dict[str, Any] = PROTOCOL["action_policy"]
 REASON_IDS: set[str] = {r["id"] for r in PROTOCOL["review_reasons"]}
-FLAGS: dict[str, str | None] = PROTOCOL["risk_flags"]
+GATE_RULES: dict[str, str] = {
+    r["id"]: r["gate_rule"] for r in PROTOCOL["review_reasons"] if r["mandatory_rule"]
+}
 PRIORITY: dict[str, int] = {c["id"]: c["priority"] for c in PROTOCOL["classes"]}
-
-
-def derive_policy(flags: list[str]) -> str:
-    for rule in POLICY["mapping_first_match"]:
-        if rule.get("default") or set(rule["if_any_flag"]) & set(flags):
-            return str(rule["profile"])
-    raise AssertionError("mapping has no default")
 
 
 def test_taxonomy_has_five_classes_with_unique_priorities() -> None:
@@ -98,18 +93,21 @@ def test_action_policy_invariants() -> None:
     for profile in POLICY["profiles"].values():
         assert set(profile["allowed"]) <= set(POLICY["tools"])
         assert not set(profile["allowed"]) & forbidden
-    profiles = {rule["profile"] for rule in POLICY["mapping_first_match"]}
-    assert profiles == set(POLICY["profiles"])
-    assert POLICY["mapping_first_match"][-1].get("default") is True
-    mapped = {f for rule in POLICY["mapping_first_match"] for f in rule.get("if_any_flag", [])}
-    assert mapped == set(FLAGS)
+    rules = POLICY["mapping_first_match"]
+    assert {rule["profile"] for rule in rules} == set(POLICY["profiles"])
+    assert rules[-1].get("default") is True
+    # Every mandatory rule fires the profile with mandatory review; the gate never reads gold.
+    assert set(rules[0]["if_any_gate_rule"]) == set(GATE_RULES.values())
+    assert POLICY["profiles"][rules[0]["profile"]]["mandatory_review"] is True
+    assert "never from annotations" in POLICY["decided_by"]
 
 
-def test_review_reasons_and_flags_are_consistent() -> None:
-    assert len(REASON_IDS) == len(PROTOCOL["review_reasons"]) == 8
-    assert {r for r in FLAGS.values() if r} <= REASON_IDS
-    mandatory = {r["id"] for r in PROTOCOL["review_reasons"] if r["mandatory_rule"]}
-    assert mandatory == {"RV5", "RV6", "RV7"}
+def test_review_reasons_drop_rv4_and_keep_mandatory_rules() -> None:
+    assert {"RV1", "RV2", "RV3", "RV5", "RV6", "RV7", "RV8"} == REASON_IDS
+    assert [r["id"] for r in PROTOCOL["removed_review_reasons"]] == ["RV4"]
+    assert GATE_RULES == {"RV5": "MR1", "RV6": "MR2", "RV7": "MR3"}
+    assert "broken_promises_for_rv4" not in PROTOCOL["review_thresholds"]
+    assert "risk_flags" not in PROTOCOL
 
 
 def test_experiment_parameters_are_coherent() -> None:
@@ -119,6 +117,7 @@ def test_experiment_parameters_are_coherent() -> None:
     assert 100 <= splits["test"] <= 150
     assert 20 <= splits["initial_memory_n0"] <= 30
     assert splits["test_min_per_class"] * 5 <= splits["test"]
+    assert splits["split_unit"] == "customer_id"
     assert exp["annotation_budget"] == 40
     assert exp["eval_points"][0] == 0
     assert exp["eval_points"][-1] == exp["annotation_budget"]
@@ -139,14 +138,15 @@ def test_documents_reference_every_protocol_identifier() -> None:
     names = (
         CLASSES
         + sorted(REASON_IDS)
+        + list(GATE_RULES.values())
         + list(POLICY["profiles"])
-        + list(FLAGS)
         + list(PROTOCOL["experiment"]["strategies"])
         + ["S0", "S1", "S2"]
     )
     missing = [n for n in names if n not in PROTOCOL_MD]
     assert not missing, f"not documented in EXPERIMENT_PROTOCOL.md: {missing}"
-    decisions = [f"D{i:02d}" for i in range(1, 16)]
+    assert f"Versão:** {PROTOCOL['protocol_version']}" in PROTOCOL_MD
+    decisions = [f"D{i:02d}" for i in range(1, 18)]
     assert [d for d in decisions if f"## {d} " not in DECISIONS_MD] == []
 
 
@@ -154,48 +154,39 @@ def test_reference_examples_cover_the_required_scenarios() -> None:
     assert len(EXAMPLES) >= 10
     assert len({e["id"] for e in EXAMPLES}) == len(EXAMPLES)
     assert {e["message_label"] for e in EXAMPLES} == set(CLASSES)
-    assert {e["action_policy"] for e in EXAMPLES} == set(POLICY["profiles"])
-    assert {f for e in EXAMPLES for f in e["risk_flags"]} == set(FLAGS)
+    assert {r for e in EXAMPLES for r in e["review_reasons"]} == REASON_IDS
+    # needs_additional_review must not be a function of the class (E2 would be trivial).
+    for label in ("PAYMENT_PROMISE", "PAYMENT_CLAIM", "PAYMENT_PLAN_REQUEST", OTHER):
+        assert {e["needs_additional_review"] for e in EXAMPLES if e["message_label"] == label} == {
+            True,
+            False,
+        }
 
 
 @pytest.mark.parametrize("ex", EXAMPLES, ids=[e["id"] for e in EXAMPLES])
 def test_reference_example_follows_the_rules(ex: dict[str, Any]) -> None:
     label: str = ex["message_label"]
-    secondary: list[str] = ex["secondary_intents"]
-    flags: list[str] = ex["risk_flags"]
     reasons: list[str] = ex["review_reasons"]
-    ctx: dict[str, Any] = ex["context"]
-
+    assert set(ex) == {
+        "id",
+        "title",
+        "message",
+        "context",
+        "message_label",
+        "review_reasons",
+        "needs_additional_review",
+        "rationale",
+    }
     assert label in CLASSES
-    assert OTHER not in secondary and label not in secondary
-    assert all(s in CLASSES for s in secondary)
-    if label == OTHER:
-        # Secondary intents only exist when a contradiction forced OTHER_OR_UNCLEAR.
-        assert (not secondary) or "contradictory_statements" in flags
-    else:
-        assert all(PRIORITY[label] < PRIORITY[s] for s in secondary)
-        assert "contradictory_statements" not in flags
-
-    assert set(flags) <= set(FLAGS)
     assert set(reasons) <= REASON_IDS
-    for flag, reason in FLAGS.items():
-        if reason:
-            assert (flag in flags) == (reason in reasons)
     assert ex["needs_additional_review"] is bool(reasons)
-    assert ex["action_policy"] == derive_policy(flags)
-    profile = POLICY["profiles"][ex["action_policy"]]
-    assert (not profile["mandatory_review"]) or ex["needs_additional_review"]
-
-    assert ("RV1" in reasons) == ("INVOICE_DISPUTE" in [label, *secondary])
+    if label == "INVOICE_DISPUTE":
+        assert "RV1" in reasons
+    if "RV8" in reasons:
+        assert label == OTHER
     th = PROTOCOL["review_thresholds"]
     if (
         label == "PAYMENT_PLAN_REQUEST"
-        and ctx["pending_amount_eur"] >= th["high_value_pending_eur"]
+        and ex["context"]["pending_amount_eur"] >= th["high_value_pending_eur"]
     ):
         assert "RV3" in reasons
-    if (
-        label in ("PAYMENT_PROMISE", "PAYMENT_PLAN_REQUEST")
-        and ctx["broken_promises_count"] >= th["broken_promises_for_rv4"]
-    ):
-        assert "RV4" in reasons
-    assert "RV4" not in reasons or ctx["broken_promises_count"] >= th["broken_promises_for_rv4"]

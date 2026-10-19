@@ -1,304 +1,62 @@
 {
- "dataset_version": "1.0.0-candidate",
- "protocol_version": "1.0.0",
- "status": "candidate: independent human double annotation pending (protocol 8.2.7)",
+ "dataset_version": "2.0.0-candidate",
+ "protocol_version": "2.0.0",
+ "status": "candidate: AI-written, rule-checked; independent human validation pending (T04)",
+ "human_validation": "pending",
  "test_frozen": false,
+ "split_seed": 20261019,
+ "split_unit": "customer_id",
  "files_sha256": {
-  "cases.jsonl": "d92bc961d6fd02db8ef5a6eb9b170e412c8913aabaf3329a74c94720eeda03eb",
-  "annotations.jsonl": "5b4a9ec5d3bc6cf58eb28fc94ab92186c69d26f65645439c3d6290004a505d3e"
+  "cases.jsonl": "e31fda564517eb5af028282d05ebb8e7040b0148fe16124aee831580a2d6b0cf",
+  "annotations.jsonl": "b5c3c42c507996ba7670767fcbc9f4d59ee6b7d3beaa03c17f32a4e07fd84592",
+  "adjudications.jsonl": "515a0993da87963b6712e71adaa7330bf87cf75d84a3237a6b2ce1142d543658",
+  "splits.json": "51a1e09efffd7e5a46b6dea748350ea9fbae5db4e2247c423a3442ab711c7f91"
  },
- "content_sha256": {
-  "cases": "b676bc17aea3d16a1684dad6c327832f2f184b97b2bd2ef8331b27a4e1e82460",
-  "annotations": "1763298202f6f4a1ff748bdd0d6cc644971bfff26b5a193e88e965774f875bfa"
- },
- "splits": {
-  "seed": 20261019,
-  "sizes": {
-   "seed_stock": 30,
-   "pool": 300,
-   "validation": 60,
-   "test": 120
-  },
-  "hashes": {
-   "seed_stock": {
-    "inference_view_sha256": "49af07a51d918f0a17d0948428395305a119bc7b8f7a782ebc2a1bf73ce92823",
-    "gold_sha256": "89a949b78d872b37e538f8053622f6977df8cb667dc2c4192e2df57622e4cbb3"
-   },
-   "pool": {
-    "inference_view_sha256": "11f602e23bfab9c60c43a26187d3bc072d3fb33795ae26727dd70a8aa498a668",
-    "gold_sha256": "9e79c6d62f8a71b7a898e58feeb34f89cfa079d51df292cb01198561cfc3adde"
-   },
-   "validation": {
-    "inference_view_sha256": "cc815e1bbc59310f6530b3379bf9da3a6ac95235e5fca1efab4b10654a683335",
-    "gold_sha256": "213b1e24de4ce137937069dc9d5664abaf2b6f5aa12a51f132e0a602b0d30f6f"
-   },
-   "test": {
-    "inference_view_sha256": "47f7747ac603e66c64980b7a8dd4336b3df8d0b20513e6209661a100e0b67b88",
-    "gold_sha256": "21a9b2aa559000a5615e97c8351c7affbecd4f594b865fc583554600be98dafd"
-   }
-  }
- },
- "grouping": {
-  "components": 168,
-  "largest_component": 12,
-  "customers": 180,
-  "scenarios": 502,
-  "families": 498,
-  "multi_member_families": 10
- },
- "checks": {
-  "exact_duplicates_normalised": 0,
-  "near_duplicate_pairs_jaccard_ge_threshold": 0,
-  "near_duplicate_threshold_char5gram_jaccard": 0.8,
-  "family_audit_threshold_char5gram_jaccard": 0.35,
-  "family_audit_violations": 0,
-  "embedding_cosine_check": "not performed: no local encoder (see DATASET_CARD.md)"
- },
- "statistics": {
-  "all": {
-   "n": 510,
-   "message_label": {
-    "PAYMENT_PROMISE": 95,
-    "PAYMENT_CLAIM": 110,
-    "PAYMENT_PLAN_REQUEST": 84,
-    "INVOICE_DISPUTE": 115,
-    "OTHER_OR_UNCLEAR": 106
-   },
-   "needs_additional_review": {
-    "true": 245,
-    "false": 265
-   },
-   "review_by_label": {
-    "PAYMENT_PROMISE": 22,
-    "PAYMENT_CLAIM": 33,
-    "PAYMENT_PLAN_REQUEST": 41,
-    "INVOICE_DISPUTE": 115,
-    "OTHER_OR_UNCLEAR": 34
-   },
-   "discretionary_subset": {
-    "n": 465,
-    "needs_review": 200
-   },
-   "review_reasons": {
-    "RV1": 118,
-    "RV2": 30,
-    "RV3": 33,
-    "RV4": 25,
-    "RV5": 11,
-    "RV6": 14,
-    "RV7": 20,
-    "RV8": 12
-   },
-   "risk_flags": {
-    "requests_payment_detail_change": 11,
-    "contains_agent_directed_instruction": 14,
-    "legal_or_insolvency_threat": 20,
-    "contradictory_statements": 12,
-    "insufficient_information": 37
-   },
-   "action_policy": {
-    "AP_CLARIFY_FIRST": 49,
-    "AP_REVIEW_GATED": 20,
-    "AP_SECURITY_LOCKDOWN": 25,
-    "AP_STANDARD": 416
-   },
-   "multi_intent": 33
-  },
+ "protocol_sha256": "c1ed7180dd8cdb631d80351f1edf56374a4ecddb118b66ada25bfffb48e26615",
+ "counts": {
   "seed_stock": {
-   "n": 30,
+   "cases": 30,
    "message_label": {
-    "PAYMENT_PROMISE": 6,
+    "INVOICE_DISPUTE": 6,
+    "OTHER_OR_UNCLEAR": 7,
     "PAYMENT_CLAIM": 6,
     "PAYMENT_PLAN_REQUEST": 5,
-    "INVOICE_DISPUTE": 6,
-    "OTHER_OR_UNCLEAR": 7
+    "PAYMENT_PROMISE": 6
    },
-   "needs_additional_review": {
-    "true": 14,
-    "false": 16
-   },
-   "review_by_label": {
-    "PAYMENT_PROMISE": 2,
-    "PAYMENT_CLAIM": 1,
-    "PAYMENT_PLAN_REQUEST": 2,
-    "INVOICE_DISPUTE": 6,
-    "OTHER_OR_UNCLEAR": 3
-   },
-   "discretionary_subset": {
-    "n": 27,
-    "needs_review": 11
-   },
-   "review_reasons": {
-    "RV1": 7,
-    "RV2": 1,
-    "RV3": 2,
-    "RV4": 1,
-    "RV5": 1,
-    "RV6": 1,
-    "RV7": 1,
-    "RV8": 1
-   },
-   "risk_flags": {
-    "requests_payment_detail_change": 1,
-    "contains_agent_directed_instruction": 1,
-    "legal_or_insolvency_threat": 1,
-    "contradictory_statements": 1,
-    "insufficient_information": 3
-   },
-   "action_policy": {
-    "AP_CLARIFY_FIRST": 4,
-    "AP_REVIEW_GATED": 1,
-    "AP_SECURITY_LOCKDOWN": 2,
-    "AP_STANDARD": 23
-   },
-   "multi_intent": 1
+   "needs_additional_review": 15
   },
   "pool": {
-   "n": 300,
+   "cases": 300,
    "message_label": {
-    "PAYMENT_PROMISE": 55,
-    "PAYMENT_CLAIM": 66,
-    "PAYMENT_PLAN_REQUEST": 50,
-    "INVOICE_DISPUTE": 69,
-    "OTHER_OR_UNCLEAR": 60
+    "INVOICE_DISPUTE": 65,
+    "OTHER_OR_UNCLEAR": 64,
+    "PAYMENT_CLAIM": 67,
+    "PAYMENT_PLAN_REQUEST": 52,
+    "PAYMENT_PROMISE": 52
    },
-   "needs_additional_review": {
-    "true": 145,
-    "false": 155
-   },
-   "review_by_label": {
-    "PAYMENT_PROMISE": 13,
-    "PAYMENT_CLAIM": 20,
-    "PAYMENT_PLAN_REQUEST": 24,
-    "INVOICE_DISPUTE": 69,
-    "OTHER_OR_UNCLEAR": 19
-   },
-   "discretionary_subset": {
-    "n": 275,
-    "needs_review": 120
-   },
-   "review_reasons": {
-    "RV1": 71,
-    "RV2": 17,
-    "RV3": 19,
-    "RV4": 15,
-    "RV5": 5,
-    "RV6": 8,
-    "RV7": 12,
-    "RV8": 8
-   },
-   "risk_flags": {
-    "requests_payment_detail_change": 5,
-    "contains_agent_directed_instruction": 8,
-    "legal_or_insolvency_threat": 12,
-    "contradictory_statements": 8,
-    "insufficient_information": 21
-   },
-   "action_policy": {
-    "AP_CLARIFY_FIRST": 29,
-    "AP_REVIEW_GATED": 12,
-    "AP_SECURITY_LOCKDOWN": 13,
-    "AP_STANDARD": 246
-   },
-   "multi_intent": 19
+   "needs_additional_review": 147
   },
   "validation": {
-   "n": 60,
+   "cases": 60,
    "message_label": {
-    "PAYMENT_PROMISE": 11,
-    "PAYMENT_CLAIM": 11,
+    "INVOICE_DISPUTE": 13,
+    "OTHER_OR_UNCLEAR": 13,
+    "PAYMENT_CLAIM": 12,
     "PAYMENT_PLAN_REQUEST": 11,
-    "INVOICE_DISPUTE": 14,
-    "OTHER_OR_UNCLEAR": 13
+    "PAYMENT_PROMISE": 11
    },
-   "needs_additional_review": {
-    "true": 29,
-    "false": 31
-   },
-   "review_by_label": {
-    "PAYMENT_PROMISE": 2,
-    "PAYMENT_CLAIM": 4,
-    "PAYMENT_PLAN_REQUEST": 5,
-    "INVOICE_DISPUTE": 14,
-    "OTHER_OR_UNCLEAR": 4
-   },
-   "discretionary_subset": {
-    "n": 56,
-    "needs_review": 25
-   },
-   "review_reasons": {
-    "RV1": 14,
-    "RV2": 5,
-    "RV3": 4,
-    "RV4": 5,
-    "RV5": 1,
-    "RV6": 1,
-    "RV7": 2,
-    "RV8": 2
-   },
-   "risk_flags": {
-    "requests_payment_detail_change": 1,
-    "contains_agent_directed_instruction": 1,
-    "legal_or_insolvency_threat": 2,
-    "contradictory_statements": 2,
-    "insufficient_information": 2
-   },
-   "action_policy": {
-    "AP_CLARIFY_FIRST": 4,
-    "AP_REVIEW_GATED": 2,
-    "AP_SECURITY_LOCKDOWN": 2,
-    "AP_STANDARD": 52
-   },
-   "multi_intent": 5
+   "needs_additional_review": 29
   },
   "test": {
-   "n": 120,
+   "cases": 120,
    "message_label": {
-    "PAYMENT_PROMISE": 23,
-    "PAYMENT_CLAIM": 27,
-    "PAYMENT_PLAN_REQUEST": 18,
-    "INVOICE_DISPUTE": 26,
-    "OTHER_OR_UNCLEAR": 26
+    "INVOICE_DISPUTE": 25,
+    "OTHER_OR_UNCLEAR": 25,
+    "PAYMENT_CLAIM": 26,
+    "PAYMENT_PLAN_REQUEST": 22,
+    "PAYMENT_PROMISE": 22
    },
-   "needs_additional_review": {
-    "true": 57,
-    "false": 63
-   },
-   "review_by_label": {
-    "PAYMENT_PROMISE": 5,
-    "PAYMENT_CLAIM": 8,
-    "PAYMENT_PLAN_REQUEST": 10,
-    "INVOICE_DISPUTE": 26,
-    "OTHER_OR_UNCLEAR": 8
-   },
-   "discretionary_subset": {
-    "n": 107,
-    "needs_review": 44
-   },
-   "review_reasons": {
-    "RV1": 26,
-    "RV2": 7,
-    "RV3": 8,
-    "RV4": 4,
-    "RV5": 4,
-    "RV6": 4,
-    "RV7": 5,
-    "RV8": 1
-   },
-   "risk_flags": {
-    "requests_payment_detail_change": 4,
-    "contains_agent_directed_instruction": 4,
-    "legal_or_insolvency_threat": 5,
-    "contradictory_statements": 1,
-    "insufficient_information": 11
-   },
-   "action_policy": {
-    "AP_CLARIFY_FIRST": 12,
-    "AP_REVIEW_GATED": 5,
-    "AP_SECURITY_LOCKDOWN": 8,
-    "AP_STANDARD": 95
-   },
-   "multi_intent": 8
+   "needs_additional_review": 59
   }
  }
 }

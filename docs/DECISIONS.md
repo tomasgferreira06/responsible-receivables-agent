@@ -1,6 +1,6 @@
 # Registo de Decisões Científicas e Técnicas
 
-**Protocolo:** `docs/EXPERIMENT_PROTOCOL.md` v1.0.0 · **Criado em:** 2026-10-18 (T02).
+**Protocolo:** `docs/EXPERIMENT_PROTOCOL.md` v2.0.0 (D17; v1.0.0 em T02) · **Criado em:** 2026-10-18 (T02).
 
 Convenções: **Estado** ∈ `Adotada` (em vigor), `Adotada — a validar` (pressuposto com validação experimental prevista), `Substituída`. Nenhuma decisão aqui é um resultado demonstrado: são escolhas ex ante com pressupostos explícitos. Não ficam decisões fundamentais em aberto por falta de validação externa; se o docente exigir alterações, aplica-se o procedimento da secção 13 do protocolo e regista-se na secção «Registo de alterações».
 
@@ -104,7 +104,7 @@ Convenções: **Estado** ∈ `Adotada` (em vigor), `Adotada — a validar` (pres
 - **Fundamentação:** a divisão por linha causa fugas por paráfrase da mesma família; validação separada evita usar o teste para afinar (pesos, limiares, piloto).
 - **Consequências:** exige gerador com identificadores de cenário/família (T03); validação de 60 itens é pequena (limitação).
 - **Impacto:** todas as experiências; T03/T04.
-- **Estado:** Adotada.
+- **Estado:** Adotada nos tamanhos, mínimos, deduplicação e isolamento. A unidade de divisão passou a ser o cliente (`customer_id`) por D17.
 
 ## D11 — Supervisão graduada para revisão adicional
 
@@ -114,7 +114,7 @@ Convenções: **Estado** ∈ `Adotada` (em vigor), `Adotada — a validar` (pres
 - **Fundamentação:** responde à proposta («supervisão graduada na triagem, não na autorização»); disputas obrigatórias tornariam E2 trivial.
 - **Consequências:** um produto real provavelmente tornaria as disputas obrigatórias (limitação); correlação classe→revisão elevada (diagnóstico `S_LBL`).
 - **Impacto:** E2; T09, T18.
-- **Estado:** Adotada.
+- **Estado:** Adotada. Desde 2.0.0 (D17) as discricionárias são RV1–RV3 e RV8 (RV4 retirada).
 
 ## D12 — Oráculo simulado e referência de anotação
 
@@ -167,6 +167,25 @@ Convenções: **Estado** ∈ `Adotada` (em vigor), `Adotada — a validar` (pres
 - **Regras próprias do dataset (mais estritas do que o protocolo):** `family_id` agrupa formulações com origem partilhada real. Inclui pares de contraste deliberados e mensagens de clientes diferentes com Jaccard de 5-gramas ≥ 0,35 (auditoria automática `family_audit`). As restantes famílias são singulares e isso é declarado, não escondido. Datas de vencimento < *snapshot* ≤ receção. Valores monetários guardados como texto decimal exato. Menções «dia da semana + dia do mês» verificadas contra o calendário.
 - **Consequências:** a validação humana dupla (protocolo 8.2.7) **continua por fazer** e passa a ser a T04. Até lá, as divisões são **candidatas** e o teste **não está congelado**. A verificação por *embeddings* (cosseno 0,92) não foi feita, por não haver *encoder* local; só a de Jaccard.
 - **Impacto:** T03 (substituída), T04 (redefinida), T05–T18 passam a depender do dataset estático; D10 mantém-se nos tamanhos e nas regras de divisão.
+- **Estado:** Adotada quanto à abordagem (dataset estático redigido diretamente, sem gerador). O dataset 1.0.0-candidate, o seu esquema e as «regras próprias do dataset» acima (`family_id`, *snapshot*, auditoria de famílias) foram **substituídos por D17**.
+
+## D17 — Simplificação do dataset e do protocolo (v2.0.0)
+
+- **Data:** 2026-10-19.
+- **Gatilho (13.3 a):** objetivo — o dataset candidato 1.0.0 e o seu código (≈ 760 linhas, 12 campos por caso, 13 por anotação, famílias/cenários, perfis de política e factos RV por registo) tornaram-se desproporcionados face ao âmbito, ao prazo (5/11/2026) e ao que RQ1/RQ2 realmente medem. Nenhum resultado de teste existe nem foi consultado (o teste nunca foi desbloqueado), pelo que 13.3 (b)–(c) são satisfeitos.
+- **Descrição:** reconstrução de raiz do dataset estático com um esquema mínimo e simplificação das regras de revisão e da política de execução.
+- **Alternativas:** (a) manter o dataset 1.0.0 e só remover campos (as etiquetas dependiam de RV4, `snapshot_date` e famílias, que deixariam de ser verificáveis); (b) gerador ou *templates* (abandonados em D16); (c) dataset novo, escrito diretamente, com esquema mínimo.
+- **Escolhida:** (c). Alterações:
+  1. **Casos:** só `case_id`, `customer_id`, `invoice_id`, `pending_amount_eur`, `due_date`, `received_date`, `message_text`. Saem `broken_promises_count`, `snapshot_date`, `received_at` (passa a `received_date`, só data), `message_subject`, `scenario_id`, `family_id`.
+  2. **Anotações:** só `case_id`, `message_label`, `needs_additional_review`, `review_reasons`. Saem `secondary_intents`, `risk_flags`, `action_policy`, `rv_facts`, `situation`, `rationale`, `needs_adjudication`, `annotation_status`, `authoring_batch`. A proveniência passa a ser documentada uma vez (`DATASET_CARD.md`, `manifest.json`); casos ambíguos vão para `adjudications.jsonl`.
+  3. **RV4 retirada** (dependia do histórico de promessas). RV1–RV3 e RV5–RV8 mantêm os identificadores (sem renumeração). RV2 e RV3 ganham critérios objetivos no próprio protocolo (incorporando GAP-02 e GAP-05); a fronteira PP/PR passa a ser o limite explícito de 30 dias após `received_date` (incorpora GAP-01).
+  4. **`action_policy`:** de quatro perfis calculados a partir de `risk_flags` para dois perfis explícitos (`AP_MANDATORY_REVIEW` se MR1–MR3 disparam; `AP_STANDARD` caso contrário), decididos pelo *policy gate* em execução a partir do texto bruto, nunca a partir das anotações. `AP_SECURITY_LOCKDOWN` e `AP_REVIEW_GATED` tinham as mesmas permissões; `AP_CLARIFY_FIRST` dependia de *flags* que só o LLM pode inferir. Saem `risk_flags`.
+  5. **Divisão:** unidade = cliente (as faturas pertencem a um só cliente), estratificação gananciosa por classe com semente fixa; quase-duplicados verificados entre conjuntos (Jaccard ≥ 0,80).
+  6. **Exemplos de referência:** removidos `secondary_intents`, `risk_flags` e `action_policy`; REF15 (RV4) retirado; REF16 (promessa + instrução ao agente) acrescentado.
+- **Preservado sem alteração:** RQ1, RQ2, H0/H1, as cinco classes e a sua prioridade, matriz de custos e classes críticas, custos de encaminhamento, estratégias e Risk-Aware Sampling, orçamentos (n₀ = 24, B = 40, rondas de 10), tamanhos dos conjuntos (30/300/60/120) e mínimos do teste, métricas primárias (CR, CER), plano estatístico, invariantes de segurança e a separação entre seleção para anotação e recuperação ICL.
+- **Alterações que afetam as experiências:** (i) **E2:** a referência `needs_additional_review` deixa de incluir o histórico de incumprimento; o subconjunto discricionário passa a ser RV1–RV3 e RV8; (ii) **TSR (E2):** as ações permitidas vêm de dois perfis em vez de quatro; (iii) **inferência estatística:** os clusters do *bootstrap*/aleatorização passam a ser os clientes; (iv) **E1:** nenhuma alteração ao alvo nem às métricas; o contexto no prompt passa a ser o esquema mínimo. Nenhum resultado anterior existe, pelo que não há resultados a invalidar.
+- **Consequências:** o histórico de promessas deixa de ser estudado (limitação, secção 16); os detetores MR1–MR3 (T09) têm de ser avaliados contra a referência, incluindo armadilhas lexicais presentes no dataset. Validação humana independente continua pendente (T04); o teste não está congelado.
+- **Impacto:** protocolo 1.0.0 → 2.0.0; dataset 1.0.0-candidate → 2.0.0-candidate; T03 (refeita), T04, T09, T12, T16–T18.
 - **Estado:** Adotada.
 
 ---
@@ -190,7 +209,7 @@ As cinco questões da secção 8 da proposta continuam por validar. Se alguma al
 
 Lacunas descobertas na adjudicação (protocolo 3.7) registam-se aqui com ID `GAP-nn`.
 
-As lacunas abaixo foram identificadas **pelo assistente de IA durante a redação do dataset (T03)**, não numa adjudicação humana. Em cada uma registou-se a interpretação **provisória** usada nas etiquetas. Não alteram o protocolo e têm de ser confirmadas ou corrigidas pelos anotadores humanos na T04, antes de qualquer congelamento. As GAP-01 a GAP-06 estão implementadas e verificadas em `dataset.expected_reasons`/`check_annotation`, até onde é possível verificá-las automaticamente.
+As lacunas abaixo foram identificadas **pelo assistente de IA durante a redação do dataset (T03)**, não numa adjudicação humana. Em cada uma registou-se a interpretação **provisória** usada nas etiquetas. Não alteram o protocolo e têm de ser confirmadas ou corrigidas pelos anotadores humanos na T04, antes de qualquer congelamento. As GAP-01 a GAP-06 foram implementadas em `dataset.expected_reasons`/`check_annotation` no código 1.0.0, que foi removido em D17; o estado atual de cada lacuna está na tabela seguinte.
 
 | ID | Lacuna | Interpretação provisória usada |
 | --- | --- | --- |
@@ -204,11 +223,28 @@ As lacunas abaixo foram identificadas **pelo assistente de IA durante a redaçã
 | GAP-08 | Quando usar `insufficient_information`. | OU sem intenção nem pedido acionável: vago, ausência automática, reencaminhamento, não relacionado, dúvida sobre se pagou. Pedidos concretos de documento ou esclarecimento não a recebem (cf. REF11). |
 | GAP-09 | Cliente que relata uma possível fraude de IBAN (p. ex. «recebi um email vosso com IBAN novo, é verdade?»). | **Sem regra suficiente**: RV5 exige um *pedido* de alteração, mas o risco é elevado. Seguindo 3.7, estes casos foram **excluídos** do dataset em vez de etiquetados arbitrariamente. Precisa de decisão (eventual nova versão do protocolo). |
 
+**Estado das lacunas no protocolo 2.0.0 (D17)** — a tabela acima é histórica (dataset 1.0.0):
+
+| ID | Estado em 2.0.0 |
+| --- | --- |
+| GAP-01 | Incorporada (3.1, 3.3): PP exige data até 30 dias após `received_date` e sem pedido de aceitação. |
+| GAP-02 | Incorporada (4.2, critérios de RV2). |
+| GAP-03 | Incorporada (3.4, fronteira). |
+| GAP-04 | Incorporada (secção 3, unidade anotada). |
+| GAP-05 | Incorporada (4.2, RV3: prazo desde `received_date`). |
+| GAP-06 | Incorporada (4.2), sem a parte de RV4, que foi retirada. |
+| GAP-07 | Mantida: o dataset 2.0.0 continua sem auto-correções; um pagamento falhado explicado na mensagem não é contradição (3.6, regra 3). |
+| GAP-08 | Obsoleta: `insufficient_information` deixou de existir. |
+| GAP-09 | **Continua aberta**; os casos continuam excluídos do dataset 2.0.0. |
+
+Os casos ambíguos do dataset 2.0.0 estão em `data/dataset/adjudications.jsonl` (decisões **provisórias** do autor, a confirmar ou corrigir na T04).
+
 ## Registo de alterações ao protocolo
 
 | Versão | Data | Gatilho | Alteração | Evidência (sem teste) | Hash antes → depois |
 | --- | --- | --- | --- | --- | --- |
 | 1.0.0 | 2026-10-18 | Criação (T02) | — | — | — |
+| 2.0.0 | 2026-10-19 | Complexidade desproporcionada do dataset candidato (D17) | RV4 retirada; `risk_flags` retiradas; `action_policy` com 2 perfis decididos pelo *gate*; critérios objetivos de RV2/RV3 e fronteira PP/PR (30 dias); unidade de divisão = cliente; esquema mínimo do dataset; REF15 → REF16 | Revisão do dataset 1.0.0 (sem piloto, sem validação, sem teste) | `protocol.json` 54200902… → c1ed7180… |
 
 ## Registo *go/no-go* do piloto (T05)
 
