@@ -45,6 +45,19 @@ uv run --locked ruff format --check .
 uv run --locked mypy src tests
 ```
 
+## Dataset (T03)
+
+Dataset estático de 510 mensagens sintéticas PT-PT em `data/dataset/`. Descrição, estado de validação e limitações: [`docs/DATASET_CARD.md`](docs/DATASET_CARD.md).
+
+```powershell
+uv run --locked python -m responsible_receivables_agent.dataset validate      # registos, regras, duplicados, divisões, hashes
+uv run --locked python -m responsible_receivables_agent.dataset stats         # distribuições por conjunto
+uv run --locked python -m responsible_receivables_agent.dataset check-splits  # tamanhos, grupos, leakage, reprodutibilidade
+uv run --locked python -m responsible_receivables_agent.dataset check-hashes  # manifesto vs ficheiros
+```
+
+`build` reescreve `splits.json` e `manifest.json`; só se usa ao criar uma nova versão do dataset.
+
 ## Organização
 
 ```text
@@ -57,5 +70,6 @@ pyproject.toml  uv.lock              dependências e lock reprodutível (uv)
 
 ## Estado atual
 
-T01 (bootstrap do repositório e qualidade base) implementada, aguarda revisão. Ainda não existe
-agente, dados nem lógica de negócio.
+T01–T02 concluídas. T03 (dataset estático anotado, divisões candidatas, manifesto) implementada e a
+aguardar revisão. A validação humana dupla do dataset (T04) está pendente. Ainda não existe agente,
+LLM nem lógica de negócio.

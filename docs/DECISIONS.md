@@ -156,6 +156,19 @@ Convenções: **Estado** ∈ `Adotada` (em vigor), `Adotada — a validar` (pres
 - **Impacto:** E2; T18.
 - **Estado:** Adotada.
 
+## D16 — Dataset estático (*dataset-first*) em vez de gerador programático
+
+- **Data:** 2026-10-19 (T03).
+- **Descrição:** forma de obter as 510 mensagens anotadas exigidas por D10 e pelo protocolo 8.1.
+- **Alternativas:** (a) gerador determinístico por semente, com *templates* (plano original da T03); (b) LLM a gerar mensagens durante as experiências; (c) dataset estático, redigido uma única vez, versionado e validado por código.
+- **Escolhida:** (c). A abordagem de geração programática foi **abandonada**: o código e os resultados dessa fase foram apagados de propósito e não são reutilizados. As 510 mensagens foram redigidas uma a uma pelo assistente de IA (Claude Opus 5.5, `claude-opus-5-5`, no Claude Code) e não por um programa que preencha *templates*. São conteúdo **sintético gerado por IA**, não anotações humanas independentes. O código do repositório (`dataset.py`) só lê, valida, divide e calcula *hashes*.
+- **Fundamentação:** o gerador não é a contribuição científica do projeto. Um dataset fixo é mais fácil de rever linha a linha, elimina a variabilidade do gerador e permite auditar cada etiqueta.
+- **Correspondência com o protocolo (sem o alterar):** 8.2.8/8.2.9 pedem «gerador/versão/semente». Num dataset estático, isso corresponde a: origem = redação por IA, modelo identificado, sem semente de geração. A única semente é a da divisão (`SPLIT_SEED = 20261019`), que só controla a atribuição de componentes aos conjuntos. Em 13.2.1, «regenerar» passa a «rever ou reescrever mensagens com nova versão do dataset». Na ameaça de validade 2.1 (iii), «gerador comum» passa a «autor comum (o mesmo modelo de IA) para todas as divisões». O modelo autor é de família diferente do classificador previsto (Llama), como recomenda 8.2.8.
+- **Regras próprias do dataset (mais estritas do que o protocolo):** `family_id` agrupa formulações com origem partilhada real. Inclui pares de contraste deliberados e mensagens de clientes diferentes com Jaccard de 5-gramas ≥ 0,35 (auditoria automática `family_audit`). As restantes famílias são singulares e isso é declarado, não escondido. Datas de vencimento < *snapshot* ≤ receção. Valores monetários guardados como texto decimal exato. Menções «dia da semana + dia do mês» verificadas contra o calendário.
+- **Consequências:** a validação humana dupla (protocolo 8.2.7) **continua por fazer** e passa a ser a T04. Até lá, as divisões são **candidatas** e o teste **não está congelado**. A verificação por *embeddings* (cosseno 0,92) não foi feita, por não haver *encoder* local; só a de Jaccard.
+- **Impacto:** T03 (substituída), T04 (redefinida), T05–T18 passam a depender do dataset estático; D10 mantém-se nos tamanhos e nas regras de divisão.
+- **Estado:** Adotada.
+
 ---
 
 ## Divergências e esclarecimentos face aos documentos de partida
@@ -175,7 +188,21 @@ As cinco questões da secção 8 da proposta continuam por validar. Se alguma al
 
 ## Lacunas de anotação
 
-Vazio. Lacunas descobertas na adjudicação (protocolo 3.7) registam-se aqui com ID `GAP-nn`.
+Lacunas descobertas na adjudicação (protocolo 3.7) registam-se aqui com ID `GAP-nn`.
+
+As lacunas abaixo foram identificadas **pelo assistente de IA durante a redação do dataset (T03)**, não numa adjudicação humana. Em cada uma registou-se a interpretação **provisória** usada nas etiquetas. Não alteram o protocolo e têm de ser confirmadas ou corrigidas pelos anotadores humanos na T04, antes de qualquer congelamento. As GAP-01 a GAP-06 estão implementadas e verificadas em `dataset.expected_reasons`/`check_annotation`, até onde é possível verificá-las automaticamente.
+
+| ID | Lacuna | Interpretação provisória usada |
+| --- | --- | --- |
+| GAP-01 | Todas as faturas do dataset estão vencidas, por isso «data posterior ao vencimento» (fronteira 3.3) não basta para separar PP de PR. | **PP**: compromisso firme de pagar o valor numa data próxima (até cerca de 3 semanas), sem pedir aceitação nem invocar incapacidade. **PR**: pede ou propõe prestações, extensão ou nova data; declara que só consegue pagar mais tarde (incapacidade, financiamento, orçamento); ou fixa unilateralmente uma data distante. |
+| GAP-02 | Critérios de completude de RV2. | Valor explícito (número, ou «totalidade/valor total»; «a fatura» sozinha não basta, cf. REF03); data identificável («ontem», «dia 6», «sexta passada»; não contam «semana passada» nem «há uns dias»); meio ou referência. Anexos não contam, porque o agente não os lê. Terceiro pagador = pagamento feito por, ou para, uma entidade diferente (conta pessoal de sócio ou familiar, empresa-mãe, entidade pública, conta de destino não confirmada). Quem só transmite a informação (p. ex. o contabilista) não é terceiro. Valor alegado = soma do que foi alegadamente pago para este documento. |
+| GAP-03 | Pedidos sobre o documento: contestação ou pedido neutro? | Erro de conteúdo imputado ao fornecedor que condiciona o pagamento (NIF, entidade, referência de compromisso, vencimento, IVA, mesmo a favor do cliente) → INVOICE_DISPUTE. Reenvio, cópia, guia, relatório, canal ou formato, sem condicionar o pagamento → OTHER_OR_UNCLEAR. Compensação com um crédito alegado → INVOICE_DISPUTE (recusa da obrigação na parte compensada). |
+| GAP-04 | Mensagens que falam de várias faturas. | `message_label` e `secondary_intents` consideram só as intenções sobre o documento do caso (`invoice_id`). As *flags* de risco (RV5–RV7) aplicam-se ao texto inteiro, porque as regras obrigatórias atuam sobre o texto bruto (4.2). |
+| GAP-05 | Medida do «prazo total» de RV3. | `plan_total_months` = meses entre a mensagem e o último pagamento proposto, arredondado; é usado só para o limiar > 6. Os casos de fronteira (≈ 6 meses) foram evitados ou reescritos. |
+| GAP-06 | Interação das regras com a contradição e com intenções secundárias. | RV1 aplica-se sempre que haja contestação, incluindo numa contradição. RV2, RV3 e RV4 não se aplicam a intenções que fazem parte de uma contradição (como em REF12, que só tem RV8). RV3/RV4 aplicam-se a PR/PP principal ou secundária. |
+| GAP-07 | Auto-correções («ou melhor», «afinal»). | Não foram usadas no dataset, para não alargar a regra de contradição. As contradições incluídas mantêm as duas afirmações (também quando vêm de fontes diferentes do cliente, p. ex. «o sócio diz que…»). |
+| GAP-08 | Quando usar `insufficient_information`. | OU sem intenção nem pedido acionável: vago, ausência automática, reencaminhamento, não relacionado, dúvida sobre se pagou. Pedidos concretos de documento ou esclarecimento não a recebem (cf. REF11). |
+| GAP-09 | Cliente que relata uma possível fraude de IBAN (p. ex. «recebi um email vosso com IBAN novo, é verdade?»). | **Sem regra suficiente**: RV5 exige um *pedido* de alteração, mas o risco é elevado. Seguindo 3.7, estes casos foram **excluídos** do dataset em vez de etiquetados arbitrariamente. Precisa de decisão (eventual nova versão do protocolo). |
 
 ## Registo de alterações ao protocolo
 
