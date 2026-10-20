@@ -76,8 +76,10 @@ def test_oracle_answers_only_queried_pool_cases() -> None:
     assert oracle.queried == picked
 
 
-def test_splits_are_reproducible_and_group_customers() -> None:
-    assert ds.assign_splits(CASES, ANNOTATIONS) == SPLITS
+def test_splits_are_frozen_or_reproducible_and_group_customers() -> None:
+    if not ds.FROZEN:
+        assert ds.assign_splits(CASES, ANNOTATIONS) == SPLITS
+    assert ds.assign_splits(CASES, ANNOTATIONS) == ds.assign_splits(CASES, ANNOTATIONS)
     assert ds.assign_splits(CASES, ANNOTATIONS, seed=1) != SPLITS
     where = {cid: s for s, ids in SPLITS.items() for cid in ids}
     for key in ("customer_id", "invoice_id"):

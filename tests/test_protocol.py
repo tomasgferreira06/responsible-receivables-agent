@@ -146,7 +146,7 @@ def test_documents_reference_every_protocol_identifier() -> None:
     missing = [n for n in names if n not in PROTOCOL_MD]
     assert not missing, f"not documented in EXPERIMENT_PROTOCOL.md: {missing}"
     assert f"Versão:** {PROTOCOL['protocol_version']}" in PROTOCOL_MD
-    decisions = [f"D{i:02d}" for i in range(1, 18)]
+    decisions = [f"D{i:02d}" for i in range(1, 19)]
     assert [d for d in decisions if f"## {d} " not in DECISIONS_MD] == []
 
 

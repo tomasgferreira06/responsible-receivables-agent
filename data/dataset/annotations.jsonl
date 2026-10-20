@@ -261,7 +261,7 @@
 {"case_id": "RRA-0261", "message_label": "PAYMENT_PLAN_REQUEST", "needs_additional_review": true, "review_reasons": ["RV3"]}
 {"case_id": "RRA-0262", "message_label": "INVOICE_DISPUTE", "needs_additional_review": true, "review_reasons": ["RV1"]}
 {"case_id": "RRA-0263", "message_label": "OTHER_OR_UNCLEAR", "needs_additional_review": false, "review_reasons": []}
-{"case_id": "RRA-0264", "message_label": "PAYMENT_CLAIM", "needs_additional_review": false, "review_reasons": []}
+{"case_id": "RRA-0264", "message_label": "PAYMENT_CLAIM", "needs_additional_review": true, "review_reasons": ["RV3"]}
 {"case_id": "RRA-0265", "message_label": "INVOICE_DISPUTE", "needs_additional_review": true, "review_reasons": ["RV1"]}
 {"case_id": "RRA-0266", "message_label": "PAYMENT_PROMISE", "needs_additional_review": false, "review_reasons": []}
 {"case_id": "RRA-0267", "message_label": "PAYMENT_PLAN_REQUEST", "needs_additional_review": false, "review_reasons": []}
@@ -344,11 +344,11 @@
 {"case_id": "RRA-0344", "message_label": "OTHER_OR_UNCLEAR", "needs_additional_review": false, "review_reasons": []}
 {"case_id": "RRA-0345", "message_label": "PAYMENT_CLAIM", "needs_additional_review": true, "review_reasons": ["RV2"]}
 {"case_id": "RRA-0346", "message_label": "OTHER_OR_UNCLEAR", "needs_additional_review": true, "review_reasons": ["RV6"]}
-{"case_id": "RRA-0347", "message_label": "PAYMENT_PLAN_REQUEST", "needs_additional_review": false, "review_reasons": []}
+{"case_id": "RRA-0347", "message_label": "PAYMENT_PLAN_REQUEST", "needs_additional_review": true, "review_reasons": ["RV3"]}
 {"case_id": "RRA-0348", "message_label": "INVOICE_DISPUTE", "needs_additional_review": true, "review_reasons": ["RV1"]}
 {"case_id": "RRA-0349", "message_label": "PAYMENT_CLAIM", "needs_additional_review": false, "review_reasons": []}
 {"case_id": "RRA-0350", "message_label": "PAYMENT_PROMISE", "needs_additional_review": false, "review_reasons": []}
-{"case_id": "RRA-0351", "message_label": "OTHER_OR_UNCLEAR", "needs_additional_review": false, "review_reasons": []}
+{"case_id": "RRA-0351", "message_label": "PAYMENT_CLAIM", "needs_additional_review": true, "review_reasons": ["RV2"]}
 {"case_id": "RRA-0352", "message_label": "PAYMENT_CLAIM", "needs_additional_review": false, "review_reasons": []}
 {"case_id": "RRA-0353", "message_label": "PAYMENT_PROMISE", "needs_additional_review": false, "review_reasons": []}
 {"case_id": "RRA-0354", "message_label": "INVOICE_DISPUTE", "needs_additional_review": true, "review_reasons": ["RV1"]}
@@ -487,7 +487,7 @@
 {"case_id": "RRA-0487", "message_label": "PAYMENT_CLAIM", "needs_additional_review": false, "review_reasons": []}
 {"case_id": "RRA-0488", "message_label": "INVOICE_DISPUTE", "needs_additional_review": true, "review_reasons": ["RV1"]}
 {"case_id": "RRA-0489", "message_label": "PAYMENT_PLAN_REQUEST", "needs_additional_review": true, "review_reasons": ["RV3"]}
-{"case_id": "RRA-0490", "message_label": "OTHER_OR_UNCLEAR", "needs_additional_review": false, "review_reasons": []}
+{"case_id": "RRA-0490", "message_label": "INVOICE_DISPUTE", "needs_additional_review": true, "review_reasons": ["RV1"]}
 {"case_id": "RRA-0491", "message_label": "PAYMENT_CLAIM", "needs_additional_review": true, "review_reasons": ["RV2"]}
 {"case_id": "RRA-0492", "message_label": "PAYMENT_PROMISE", "needs_additional_review": true, "review_reasons": ["RV7"]}
 {"case_id": "RRA-0493", "message_label": "OTHER_OR_UNCLEAR", "needs_additional_review": false, "review_reasons": []}

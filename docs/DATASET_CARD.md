@@ -1,7 +1,9 @@
-# Dataset Card — Responsible Receivables Agent (v2.0.0-candidate)
+# Dataset Card — Responsible Receivables Agent (v2.1.0, congelado)
 
-**Protocolo:** `docs/EXPERIMENT_PROTOCOL.md` v2.0.0 · **Decisões:** `docs/DECISIONS.md` D16, D17 · **Criado em:** 2026-10-19 (T03, refeita)
-**Estado:** **candidato**. A validação humana independente **não foi feita** (T04). O teste **não está congelado** (`manifest.json → test_frozen: false`).
+**Protocolo:** `docs/EXPERIMENT_PROTOCOL.md` v2.1.0 · **Decisões:** `docs/DECISIONS.md` D16, D17, D18 · **Criado em:** 2026-10-19 (T03, refeita) · **Congelado em:** 2026-10-20 (D18)
+**Estado:** **congelado** (`manifest.json → test_frozen: true`). Auditado por IA (`docs/audits/DATASET_AI_REVIEW_V2.md`) e com os casos divergentes ou de fronteira decididos pelo responsável do projeto. **Não** houve dupla anotação humana nem κ de Cohen (desvio declarado ao protocolo 8.2(7), D18).
+
+**Alterações face a 2.0.0-candidate (D18):** RRA-0347 e RRA-0264 passam a ter RV3 (adiamento indeterminado); RRA-0351 passa a `PAYMENT_CLAIM` + RV2; RRA-0490 (teste) passa a `INVOICE_DISPUTE` + RV1. Mensagens e `splits.json` inalterados.
 
 Substitui integralmente o dataset 1.0.0-candidate (mesmo número de mensagens, esquema e conteúdo novos). Nada do dataset anterior nem do gerador abandonado foi reutilizado.
 
@@ -24,11 +26,12 @@ Cobranças de um fornecedor fictício (manutenção, equipamentos, consumíveis 
 
 1. **Redação direta.** As 510 mensagens foram escritas uma a uma pelo assistente de IA **Claude Opus 5.5** (`claude-opus-5-5`, no Claude Code), a 2026-10-19, em 10 lotes organizados por cliente. **Não foi usado gerador, *template*, motor de cenários nem preenchimento automático de texto.**
 2. **Formato de trabalho.** A redação foi feita num formato compacto (uma linha por mensagem com cliente, fatura, montante, datas, classe, razões e texto). Um script descartável, fora do repositório, **só reformatou** esses registos: numerou os `case_id` por ordem, escreveu `needs_additional_review = bool(review_reasons)` e separou entradas e etiquetas nos dois ficheiros. Não alterou nenhum texto nem nenhuma etiqueta.
-3. **Etiquetas propostas pelo mesmo assistente**, aplicando as regras do protocolo 2.0.0 (secções 3–4). Os 14 casos que o autor considerou genuinamente ambíguos estão em `adjudications.jsonl`, com a decisão **provisória** e a regra usada.
+3. **Etiquetas propostas pelo mesmo assistente**, aplicando as regras do protocolo 2.0.0 (secções 3–4). Os 14 casos que o autor considerou genuinamente ambíguos foram registados em `adjudications.jsonl`, com a decisão provisória e a regra usada.
 4. **Controlo de qualidade durante a redação** (verificação automática pelo autor, não validação): coerência dia da semana/data face a `received_date`, mesma fatura → mesmo cliente/montante/vencimento, vencimento anterior à receção e pesquisa de formulações repetidas. Os pares com Jaccard de 5-gramas ≥ 0,35 foram reescritos; o valor máximo final entre quaisquer duas mensagens é < 0,40.
-5. **Revisão humana independente e adjudicação:** **não realizadas** (T04).
+5. **Auditoria e decisões finais (2026-10-20, D18):** revisão cega das 510 mensagens por Claude Opus 5.5, o mesmo modelo autor (concordância IA–IA de 99,2 % na classe; não é validação independente). O responsável do projeto decidiu os casos divergentes ou de fronteira (RRA-0228, 0264, 0288, 0347, 0351, 0440, 0490). `adjudications.jsonl` tem 19 registos: os marcados «Decisão do responsável do projeto» são humanos; os restantes ficam como decisões provisórias do autor, congeladas.
+6. **Dupla anotação humana com κ:** **não realizada** (desvio declarado, D18).
 
-O facto de o mesmo modelo ter escrito, etiquetado e revisto **não** equivale a anotação independente. Passar nos testes automáticos significa coerência interna com as regras, **não** que as etiquetas estejam cientificamente validadas.
+O facto de o mesmo modelo ter escrito, etiquetado e auditado **não** equivale a anotação independente. Passar nos testes automáticos significa coerência interna com as regras, **não** que as etiquetas estejam cientificamente validadas.
 
 ## 4. Esquema
 
@@ -57,7 +60,7 @@ Ficheiros em `data/dataset/`, UTF-8, uma linha JSON por caso.
 | `case_id` | str | ligação ao caso |
 | `message_label` | uma das 5 classes | alvo de E1 |
 | `needs_additional_review` | bool, sempre `= bool(review_reasons)` | alvo de E2 |
-| `review_reasons` | lista ordenada ⊆ {RV1, RV2, RV3, RV5, RV6, RV7, RV8} | razões; RV4 não existe |
+| `review_reasons` | lista ordenada ⊆ {RV1, RV2, RV3, RV5, RV6, RV7, RV8} | razões; RV4 não existe; RV3 inclui adiamento indeterminado desde 2.1.0 |
 
 ```json
 {"case_id": "RRA-0001", "message_label": "INVOICE_DISPUTE", "needs_additional_review": true, "review_reasons": ["RV1", "RV2"]}
@@ -78,26 +81,26 @@ Ficheiros em `data/dataset/`, UTF-8, uma linha JSON por caso.
 | Classe | Com revisão | Sem revisão | Total |
 | --- | ---: | ---: | ---: |
 | `PAYMENT_PROMISE` | 7 | 84 | 91 |
-| `PAYMENT_CLAIM` | 47 | 64 | 111 |
-| `PAYMENT_PLAN_REQUEST` | 44 | 46 | 90 |
-| `INVOICE_DISPUTE` | 109 | 0 | 109 |
-| `OTHER_OR_UNCLEAR` | 43 | 66 | 109 |
-| **Total** | **250** | **260** | **510** |
+| `PAYMENT_CLAIM` | 49 | 63 | 112 |
+| `PAYMENT_PLAN_REQUEST` | 45 | 45 | 90 |
+| `INVOICE_DISPUTE` | 110 | 0 | 110 |
+| `OTHER_OR_UNCLEAR` | 43 | 64 | 107 |
+| **Total** | **254** | **256** | **510** |
 
-**Razões:** RV1 112 · RV2 43 · RV3 41 · RV5 14 · RV6 19 · RV7 23 · RV8 16 (18 casos com mais de uma razão). Casos com regra obrigatória (RV5–RV7): 56; subconjunto discricionário: 454, dos quais 194 com revisão.
+**Razões:** RV1 113 · RV2 44 · RV3 43 · RV5 14 · RV6 19 · RV7 23 · RV8 16 (18 casos com mais de uma razão). Casos com regra obrigatória (RV5–RV7): 56; subconjunto discricionário: 454, dos quais 198 com revisão.
 
 **Por conjunto** (classe: com revisão / total):
 
 | Conjunto | Casos | PP | PC | PR | ID | OU | Revisão | Discricionários c/ revisão |
 | --- | ---: | --- | --- | --- | --- | --- | ---: | ---: |
 | `seed_stock` | 30 | 1/6 | 3/6 | 2/5 | 6/6 | 3/7 | 15 | 10 |
-| `pool` | 300 | 3/52 | 28/67 | 26/52 | 65/65 | 25/64 | 147 | 110 |
+| `pool` | 300 | 3/52 | 30/68 | 27/52 | 65/65 | 25/63 | 150 | 113 |
 | `validation` | 60 | 1/11 | 5/12 | 5/11 | 13/13 | 5/13 | 29 | 23 |
-| `test` | 120 | 2/22 | 11/26 | 11/22 | 25/25 | 10/25 | 59 | 51 |
+| `test` | 120 | 2/22 | 11/26 | 11/22 | 26/26 | 10/24 | 60 | 52 |
 
-Mínimos do teste: ≥ 12 por classe (mínimo observado 22) e ≥ 40 críticos `PAYMENT_CLAIM` + `INVOICE_DISPUTE` (observado 51). Os números exatos estão em `manifest.json → counts`.
+Mínimos do teste: ≥ 12 por classe (mínimo observado 22) e ≥ 40 críticos `PAYMENT_CLAIM` + `INVOICE_DISPUTE` (observado 52). Os números exatos estão em `manifest.json → counts`.
 
-**Porque a E2 não é trivial.** `needs_additional_review` não é função da classe: há alegações com e sem revisão (RV2: incompleta, inconsistente, terceiro pagador ou destino não confirmado), planos com e sem revisão (RV3: ≥ 5 000 € ou > 6 meses), `OTHER_OR_UNCLEAR` com e sem revisão (RV8 e regras obrigatórias vs. pedidos de documentos, respostas vagas, respostas automáticas) e promessas com revisão apenas por regras obrigatórias. A maioria dos casos com revisão está no subconjunto discricionário, não nas regras obrigatórias. Em contrapartida, `INVOICE_DISPUTE` tem sempre revisão (RV1), por construção do protocolo (D11): a correlação classe→revisão continua alta e é reportada (protocolo 10.5).
+**Porque a E2 não é trivial.** `needs_additional_review` não é função da classe: há alegações com e sem revisão (RV2: incompleta, inconsistente, terceiro pagador ou destino não confirmado), planos com e sem revisão (RV3: ≥ 5 000 €, > 6 meses ou adiamento sem data), `OTHER_OR_UNCLEAR` com e sem revisão (RV8 e regras obrigatórias vs. pedidos de documentos, respostas vagas, respostas automáticas) e promessas com revisão apenas por regras obrigatórias. A maioria dos casos com revisão está no subconjunto discricionário, não nas regras obrigatórias. Em contrapartida, `INVOICE_DISPUTE` tem sempre revisão (RV1), por construção do protocolo (D11): a correlação classe→revisão continua alta e é reportada (protocolo 10.5).
 
 ## 6. Dificuldade
 
@@ -109,7 +112,7 @@ Não existe um campo de dificuldade (não é usado em nenhuma métrica). Qualita
 
 ## 7. Divisões
 
-`dataset.assign_splits`, semente `20261019`. Unidade indivisível: **cliente** (logo também a fatura). Clientes ordenados por tamanho (maiores primeiro), ordem aleatória por semente dentro do mesmo tamanho, cada cliente atribuído ao conjunto com maior défice relativo face ao perfil global de classe × revisão, respeitando os tamanhos 30/300/60/120. A verificação refaz a divisão e exige igualdade com `splits.json`.
+`dataset.assign_splits`, semente `20261019`. Unidade indivisível: **cliente** (logo também a fatura). Clientes ordenados por tamanho (maiores primeiro), ordem aleatória por semente dentro do mesmo tamanho, cada cliente atribuído ao conjunto com maior défice relativo face ao perfil global de classe × revisão, respeitando os tamanhos 30/300/60/120. A divisão foi calculada com as etiquetas 2.0.0-candidate e **congelada** em 2.1.0 (D18): as correções de etiquetas posteriores não a recalculam (recalcular trocaria 39 casos de teste), pelo que a estratificação por classe × revisão é aproximada e não exatamente a do algoritmo. `splits.json` fica protegido pelo *hash* no manifesto.
 
 ## 8. Utilização e isolamento das etiquetas
 
@@ -126,12 +129,13 @@ Usar sempre `responsible_receivables_agent.dataset`, nunca ler `annotations.json
 
 ## 9. Verificações automáticas
 
-`uv run --locked python -m responsible_receivables_agent.dataset check` (e `tests/test_dataset.py`) verificam: campos exatos dos dois esquemas (nenhum campo antigo); formatos de ids, montantes e datas; `needs_additional_review = bool(review_reasons)`; razões dentro do protocolo (sem RV4); cobertura caso↔anotação; coerência de cada fatura; duplicados exatos (texto normalizado); tamanhos dos conjuntos; nenhum caso em dois conjuntos; nenhum cliente ou fatura em dois conjuntos; quase-duplicados entre conjuntos (Jaccard de 5-gramas ≥ 0,80); mínimos do teste; reprodutibilidade da divisão; e manifesto atualizado (*hashes*, versões, contagens). `build` reescreve `splits.json` e `manifest.json` e só deve ser usado ao criar uma nova versão do dataset.
+`uv run --locked python -m responsible_receivables_agent.dataset check` (e `tests/test_dataset.py`) verificam: campos exatos dos dois esquemas (nenhum campo antigo); formatos de ids, montantes e datas; `needs_additional_review = bool(review_reasons)`; razões dentro do protocolo (sem RV4); cobertura caso↔anotação; coerência de cada fatura; duplicados exatos (texto normalizado); tamanhos dos conjuntos; nenhum caso em dois conjuntos; nenhum cliente ou fatura em dois conjuntos; quase-duplicados entre conjuntos (Jaccard de 5-gramas ≥ 0,80); mínimos do teste; reprodutibilidade da divisão (só enquanto o dataset não está congelado); e manifesto atualizado (*hashes*, versões, contagens). Com o dataset congelado (`dataset.FROZEN`), `build` só regenera `manifest.json` e nunca reescreve `splits.json`.
 
 ## 10. Limitações
 
 - **Um só autor** (modelo de IA) escreveu todas as mensagens e propôs todas as etiquetas: risco de estilo e de vieses comuns a todos os conjuntos; sem concordância entre anotadores.
-- Etiquetas **não validadas por humanos**; as 14 adjudicações são decisões provisórias do autor.
+- Etiquetas **sem dupla anotação humana** nem κ; só os casos divergentes ou de fronteira da auditoria foram decididos por um humano. As restantes adjudicações são decisões provisórias do autor, congeladas.
+- Riscos identificados na auditoria (`docs/audits/DATASET_AI_REVIEW_V2.md`): separabilidade lexical elevada (um Naive Bayes trivial obtém macro-F1 ≈ 0,85 na validação, risco de efeito teto em E1); em E2, revisão constante por classe no subconjunto discricionário (`PAYMENT_PROMISE` nunca, `INVOICE_DISPUTE` sempre); contradições (RV8) pouco realistas.
 - **Quase-duplicados semânticos** (cosseno de *embeddings* ≥ 0,92) ainda não verificados: dependem do *encoder* fixado em T12.
 - Algumas classes têm marcadores lexicais naturais (p. ex. «prestações» em planos); o autor variou a formulação, mas não se mediu o desempenho de um classificador lexical simples.
 - Contexto mínimo: sem histórico de pagamentos ou promessas (RV4 retirada), pelo que o incumprimento repetido não é estudado.
@@ -139,6 +143,6 @@ Usar sempre `responsible_receivables_agent.dataset`, nunca ler `annotations.json
 - GAP-09 (cliente que reporta um IBAN suspeito) continua sem regra; esses casos não existem no dataset.
 - Pequena dimensão da validação (60) e do teste (120): intervalos de confiança largos.
 
-## 11. O que falta (T04)
+## 11. Estado após o congelamento
 
-Dupla anotação humana cega sobre `load_inputs` (validação e teste completos, 20 % de *seed* e *pool*), κ de Cohen ≥ 0,70 para `message_label` e `needs_additional_review`, adjudicação (incluindo os 14 casos de `adjudications.jsonl` e GAP-09), correção ou exclusão de casos com nova versão do dataset, verificação por *embeddings* e, só então, `test_frozen = true` com os *hashes* registados.
+O teste está congelado desde 2026-10-20 (D18): as mensagens, as etiquetas e `splits.json` não se alteram durante E1/E2. Ficaram por fazer, e são limitações a reportar: dupla anotação humana com κ de Cohen (protocolo 8.2(7)); a verificação por *embeddings* (cosseno ≥ 0,92), que depende do *encoder* fixado em T12; e uma regra para GAP-09. Qualquer correção futura exige uma nova versão do dataset e do manifesto.

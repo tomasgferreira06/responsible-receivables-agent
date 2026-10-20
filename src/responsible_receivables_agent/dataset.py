@@ -24,7 +24,10 @@ DATA_DIR = ROOT / "data" / "dataset"
 PROTOCOL_PATH = ROOT / "docs" / "protocol" / "protocol.json"
 PROTOCOL: dict[str, Any] = json.loads(PROTOCOL_PATH.read_text("utf-8"))
 
-DATASET_VERSION = "2.0.0-candidate"
+DATASET_VERSION = "2.1.0"
+# Frozen 2026-10-20 (D18): splits.json is fixed and protected by its hash; it is no longer
+# re-derived from the labels, because later label corrections would reshuffle the test set.
+FROZEN = True
 SPLIT_SEED = 20261019
 SPLITS = ("seed_stock", "pool", "validation", "test")
 SPLIT_SIZES: dict[str, int] = {s: PROTOCOL["experiment"]["splits"][s] for s in SPLITS}
@@ -234,7 +237,7 @@ def check_splits(
         for c in cases:
             seen.setdefault(c[key], set()).add(where.get(c["case_id"], "?"))
         errors += [f"{key} {k} crosses splits {sorted(v)}" for k, v in seen.items() if len(v) > 1]
-    if splits != assign_splits(cases, annotations):
+    if not FROZEN and splits != assign_splits(cases, annotations):
         errors.append(f"splits.json is not reproducible with seed {SPLIT_SEED}")
 
     grams = [(c["case_id"], where.get(c["case_id"]), char_ngrams(c["message_text"])) for c in cases]
@@ -276,9 +279,12 @@ def build_manifest(annotations: list[Record], splits: dict[str, list[str]]) -> R
     return {
         "dataset_version": DATASET_VERSION,
         "protocol_version": PROTOCOL["protocol_version"],
-        "status": "candidate: AI-written, rule-checked; independent human validation pending (T04)",
-        "human_validation": "pending",
-        "test_frozen": False,
+        "status": (
+            "frozen 2026-10-20 (D18): AI-written, rule-checked, AI-audited; "
+            "selected cases decided by the project owner"
+        ),
+        "human_validation": "partial: owner adjudication of selected cases; no double annotation",
+        "test_frozen": FROZEN,
         "split_seed": SPLIT_SEED,
         "split_unit": "customer_id",
         "files_sha256": {f: sha256_file(DATA_DIR / f) for f in FILES},
@@ -310,8 +316,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     if args.command == "build":
-        splits = assign_splits(load_cases(), load_annotations())
-        write_json(DATA_DIR / "splits.json", {"seed": SPLIT_SEED, "splits": splits})
+        if FROZEN:
+            splits = load_splits()  # never re-split a frozen dataset; only refresh the manifest
+        else:
+            splits = assign_splits(load_cases(), load_annotations())
+            write_json(DATA_DIR / "splits.json", {"seed": SPLIT_SEED, "splits": splits})
         write_json(DATA_DIR / "manifest.json", build_manifest(load_annotations(), splits))
     errors = check_all()
     for e in errors:

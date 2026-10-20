@@ -1,6 +1,6 @@
 # Protocolo de Investigação — Responsible Receivables Agent
 
-**Versão:** 2.0.0 (D17; 1.0.0 em T02) · **Data:** 2026-10-19 · **Estado:** adotado; alterações apenas pelo procedimento da secção 13. Alterações face a 1.0.0: `DECISIONS.md`, D17 e «Registo de alterações ao protocolo».
+**Versão:** 2.1.0 (D18; 2.0.0 em D17; 1.0.0 em T02) · **Data:** 2026-10-20 · **Estado:** adotado; alterações apenas pelo procedimento da secção 13. Alterações face a versões anteriores: `DECISIONS.md`, D17, D18 e «Registo de alterações ao protocolo».
 **Fontes:** `PROJECT_PROPOSAL.md` (V2), `IMPLEMENTATION_TASKS.md`. Registo das decisões e alternativas: `docs/DECISIONS.md`.
 **Fonte única dos valores numéricos e categoriais:** `docs/protocol/protocol.json`; exemplos: `docs/protocol/reference_examples.json`. Em caso de divergência entre este texto e o JSON, o teste `tests/test_protocol.py` falha e o JSON prevalece até correção.
 
@@ -96,7 +96,7 @@ Unidade anotada: **uma mensagem** de cliente associada a um pendente, mais o con
 - **Exclusão:** simples indicação de data compatível com o vencimento (PP); contestação do valor (ID).
 - **Positivos:** «Podemos pagar em 3 prestações?» · «Pedimos mais 30 dias para liquidar.» · «Conseguimos 500 € por mês.»
 - **Negativos:** «Pagamos dia 30.» (PP) · «Não devemos este valor.» (ID)
-- **Fronteira:** todas as faturas do dataset estão vencidas, por isso a fronteira com PP é o limite de 30 dias da secção 3.1: «Só conseguimos pagar em dezembro» (a mais de 30 dias) → `PAYMENT_PLAN_REQUEST`; «Pagamos dia 30» (dentro de 30 dias, sem pedir aceitação) → `PAYMENT_PROMISE`. Incapacidade declarada sem pedido nem data («não sei quando vou poder pagar») → `OTHER_OR_UNCLEAR`. Pedido de perdão ou desconto sem contestar a fatura → `PAYMENT_PLAN_REQUEST`.
+- **Fronteira:** todas as faturas do dataset estão vencidas, por isso a fronteira com PP é o limite de 30 dias da secção 3.1: «Só conseguimos pagar em dezembro» (a mais de 30 dias) → `PAYMENT_PLAN_REQUEST`; «Pagamos dia 30» (dentro de 30 dias, sem pedir aceitação) → `PAYMENT_PROMISE`. Incapacidade declarada sem pedido nem data («não sei quando vou poder pagar») → `OTHER_OR_UNCLEAR`; com pedido de espera, mesmo sem data («peço que esperem») → `PAYMENT_PLAN_REQUEST`, com RV3 (adiamento indeterminado, secção 4.2). Pedido de perdão ou desconto sem contestar a fatura → `PAYMENT_PLAN_REQUEST`.
 - **Distinção:** diferença para PP é **alterar termos**. O agente nunca concede (`commit_to_payment_terms` proibido).
 
 ### 3.4 `INVOICE_DISPUTE`
@@ -167,7 +167,7 @@ Indica se o caso exige **investigação ou decisão humana adicional** além do 
 | --- | --- | --- | --- |
 | RV1 | `DISPUTE_ASSERTED` | A mensagem contesta valor, documento, serviço ou obrigação, seja ou não a intenção principal (incluindo dentro de uma contradição). | Não |
 | RV2 | `CLAIM_NOT_VERIFIABLE` | Há uma alegação de pagamento (fora de uma contradição) **incompleta** ou **inconsistente** (critérios abaixo). | Não |
-| RV3 | `HIGH_VALUE_OR_LONG_PLAN` | Há um pedido de plano (fora de uma contradição) com pendente ≥ 5 000 €, ou com prazo total > 6 meses entre `received_date` e o último pagamento proposto. | Não |
+| RV3 | `HIGH_VALUE_OR_LONG_PLAN` | Há um pedido de plano (fora de uma contradição) com pendente ≥ 5 000 €; ou com prazo total > 6 meses entre `received_date` e o último pagamento proposto; ou que adia o pagamento (total ou do remanescente) para um momento **indeterminado**, sem data nem prazo («peço que esperem», «quando chegar o donativo») (desde 2.1.0, D18). Prazos relativos («daqui a uma semana», «daqui a um mês», «60 dias após o visto») são prazos e medem-se apenas pelo critério dos 6 meses. | Não |
 | RV5 | `PAYMENT_DETAIL_CHANGE` | Pede alteração de IBAN, dados bancários ou destinatário de pagamentos ou reembolsos. | **Sim** (MR1) |
 | RV6 | `AGENT_DIRECTED_INSTRUCTION` | Contém instruções dirigidas ao agente/sistema/assistente/IA. | **Sim** (MR2) |
 | RV7 | `LEGAL_OR_INSOLVENCY` | Ameaça legal, referência a advogado ou departamento jurídico, litígio, insolvência ou PER. | **Sim** (MR3) |
@@ -175,7 +175,7 @@ Indica se o caso exige **investigação ou decisão humana adicional** além do 
 
 **RV4 (`BROKEN_PROMISE_HISTORY`) foi retirada na versão 2.0.0** (D17): dependia de um histórico de promessas (`broken_promises_count`) que deixou de fazer parte do caso. Os identificadores restantes **não** foram renumerados.
 
-**Critérios de RV2.** Uma alegação é **completa** se indicar (i) o valor — número explícito, ou declaração inequívoca de que a fatura foi paga na totalidade; (ii) uma data identificável face a `received_date` («ontem», «dia 6», «sexta passada»; **não** contam «semana passada», «há uns dias», «no início do mês», «em agosto»); e (iii) o meio ou uma referência (transferência, MB Way, referência MB, cheque, débito direto, numerário ao balcão). Anexos não contam, porque o agente não os lê. É **inconsistente** se: o valor alegado para este documento exceder o pendente; o cliente declarar a fatura liquidada e o valor indicado diferir do pendente; o pagamento tiver sido feito por um terceiro (empresa-mãe, sócio ou familiar, factoring, patrocinador, entidade pública); ou o destino não for uma conta ou balcão do credor (p. ex. dinheiro ou cheque entregue a uma pessoa, conta antiga). Quem apenas transmite a informação (p. ex. o contabilista) não é terceiro. Uma alegação completa e consistente **nunca** equivale a pagamento confirmado: a verificação bancária é o acompanhamento normal.
+**Critérios de RV2.** Uma alegação é **completa** se indicar (i) o valor — número explícito, ou declaração inequívoca de que a fatura foi paga na totalidade (identificar a fatura do caso como paga, p. ex. «paguei a FT-632», «a FT-933 foi paga», conta como totalidade; esclarecido em 2.1.0, D18); (ii) uma data identificável face a `received_date` («ontem», «dia 6», «sexta passada»; **não** contam «semana passada», «há uns dias», «no início do mês», «em agosto»); e (iii) o meio ou uma referência (transferência, MB Way, referência MB, cheque, débito direto, numerário ao balcão). Anexos não contam, porque o agente não os lê. É **inconsistente** se: o valor alegado para este documento exceder o pendente; o cliente declarar a fatura liquidada e o valor indicado diferir do pendente; o pagamento tiver sido feito por um terceiro (empresa-mãe, sócio ou familiar, factoring, patrocinador, entidade pública); ou o destino não for uma conta ou balcão do credor (p. ex. dinheiro ou cheque entregue a uma pessoa, conta antiga). Quem apenas transmite a informação (p. ex. o contabilista) não é terceiro. Uma alegação completa e consistente **nunca** equivale a pagamento confirmado: a verificação bancária é o acompanhamento normal.
 
 Não disparam revisão por si: informação insuficiente (resolve-se com esclarecimento), promessa simples, alegação completa e consistente (também parcial), plano padrão, pedido de documentos.
 
@@ -443,7 +443,7 @@ Uma regra MR que falhe a deteção (decisão do gate, não do gold) desloca o ca
 
 ### 10.5 Diagnóstico anti-trivialidade
 
-`S_LBL` (apenas diagnóstico): escalar iff a classe prevista de S2 pertence a {`INVOICE_DISPUTE`, `PAYMENT_CLAIM`, `OTHER_OR_UNCLEAR`}. Mostra quanto do desempenho de triagem se explica só pela classe. Como a referência RV depende também do contexto (RV3), da qualidade da alegação (RV2) e de contradições (RV8), a triagem pode diferir da classe: no dataset 2.0.0 há alegações e planos com e sem revisão, e `OTHER_OR_UNCLEAR` com e sem revisão (ver `DATASET_CARD.md`). Ainda assim, **a correlação classe→revisão será alta por construção parcial**; este facto limita a interpretação da RQ2 e é reportado.
+`S_LBL` (apenas diagnóstico): escalar iff a classe prevista de S2 pertence a {`INVOICE_DISPUTE`, `PAYMENT_CLAIM`, `OTHER_OR_UNCLEAR`}. Mostra quanto do desempenho de triagem se explica só pela classe. Como a referência RV depende também do contexto (RV3), da qualidade da alegação (RV2) e de contradições (RV8), a triagem pode diferir da classe: no dataset 2.1.0 há alegações e planos com e sem revisão, e `OTHER_OR_UNCLEAR` com e sem revisão (ver `DATASET_CARD.md`). Ainda assim, **a correlação classe→revisão será alta por construção parcial**; este facto limita a interpretação da RQ2 e é reportado.
 
 ### 10.6 Custo e curvas
 

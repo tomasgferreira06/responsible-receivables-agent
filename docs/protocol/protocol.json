@@ -1,6 +1,6 @@
 {
-  "protocol_version": "2.0.0",
-  "note": "Fonte unica de verdade numerica e categorial do protocolo (T02; v2.0.0 por D17). docs/EXPERIMENT_PROTOCOL.md explica; tests/test_protocol.py verifica a coerencia. Escala de severidade normativa, nao valores monetarios.",
+  "protocol_version": "2.1.0",
+  "note": "Fonte unica de verdade numerica e categorial do protocolo (T02; v2.0.0 por D17; v2.1.0 por D18). docs/EXPERIMENT_PROTOCOL.md explica; tests/test_protocol.py verifica a coerencia. Escala de severidade normativa, nao valores monetarios.",
   "classes": [
     {"id": "PAYMENT_PROMISE", "priority": 4},
     {"id": "PAYMENT_CLAIM", "priority": 2},

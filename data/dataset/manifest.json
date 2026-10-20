@@ -1,18 +1,18 @@
 {
- "dataset_version": "2.0.0-candidate",
- "protocol_version": "2.0.0",
- "status": "candidate: AI-written, rule-checked; independent human validation pending (T04)",
- "human_validation": "pending",
- "test_frozen": false,
+ "dataset_version": "2.1.0",
+ "protocol_version": "2.1.0",
+ "status": "frozen 2026-10-20 (D18): AI-written, rule-checked, AI-audited; selected cases decided by the project owner",
+ "human_validation": "partial: owner adjudication of selected cases; no double annotation",
+ "test_frozen": true,
  "split_seed": 20261019,
  "split_unit": "customer_id",
  "files_sha256": {
   "cases.jsonl": "e31fda564517eb5af028282d05ebb8e7040b0148fe16124aee831580a2d6b0cf",
-  "annotations.jsonl": "b5c3c42c507996ba7670767fcbc9f4d59ee6b7d3beaa03c17f32a4e07fd84592",
-  "adjudications.jsonl": "515a0993da87963b6712e71adaa7330bf87cf75d84a3237a6b2ce1142d543658",
+  "annotations.jsonl": "7beef535d53ca97e6f78466cdc6f2910dbc3d8241d88b11685481dddb427484c",
+  "adjudications.jsonl": "0966d8c910bbb170c5aff59c3874fcd3188dc3a80a5fbf8e6a0a170aa083b496",
   "splits.json": "51a1e09efffd7e5a46b6dea748350ea9fbae5db4e2247c423a3442ab711c7f91"
  },
- "protocol_sha256": "c1ed7180dd8cdb631d80351f1edf56374a4ecddb118b66ada25bfffb48e26615",
+ "protocol_sha256": "d05aa9c90191631dc191d2a66d3c89511eba968c1241925c760f26d33ddd8ce4",
  "counts": {
   "seed_stock": {
    "cases": 30,
@@ -29,12 +29,12 @@
    "cases": 300,
    "message_label": {
     "INVOICE_DISPUTE": 65,
-    "OTHER_OR_UNCLEAR": 64,
-    "PAYMENT_CLAIM": 67,
+    "OTHER_OR_UNCLEAR": 63,
+    "PAYMENT_CLAIM": 68,
     "PAYMENT_PLAN_REQUEST": 52,
     "PAYMENT_PROMISE": 52
    },
-   "needs_additional_review": 147
+   "needs_additional_review": 150
   },
   "validation": {
    "cases": 60,
@@ -50,13 +50,13 @@
   "test": {
    "cases": 120,
    "message_label": {
-    "INVOICE_DISPUTE": 25,
-    "OTHER_OR_UNCLEAR": 25,
+    "INVOICE_DISPUTE": 26,
+    "OTHER_OR_UNCLEAR": 24,
     "PAYMENT_CLAIM": 26,
     "PAYMENT_PLAN_REQUEST": 22,
     "PAYMENT_PROMISE": 22
    },
-   "needs_additional_review": 59
+   "needs_additional_review": 60
   }
  }
 }

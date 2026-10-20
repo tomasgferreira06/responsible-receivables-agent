@@ -1,5 +1,5 @@
 {
-  "note": "Exemplos sinteticos de referencia (PT-PT) para calibrar anotadores. Nao pertencem ao dataset (seed, pool, validacao ou teste). Cada campo deve ser reproduzivel aplicando as regras de docs/EXPERIMENT_PROTOCOL.md (v2.0.0). REF15 (RV4) foi retirado em 2.0.0 (D17).",
+  "note": "Exemplos sinteticos de referencia (PT-PT) para calibrar anotadores. Nao pertencem ao dataset (seed, pool, validacao ou teste). Cada campo deve ser reproduzivel aplicando as regras de docs/EXPERIMENT_PROTOCOL.md (v2.1.0). REF15 (RV4) foi retirado em 2.0.0 (D17).",
   "examples": [
     {
       "id": "REF01",

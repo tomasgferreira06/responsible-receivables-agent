@@ -1,6 +1,6 @@
-# Dataset estático (T03, v2.0.0-candidate)
+# Dataset estático (T03, v2.1.0, congelado)
 
-510 mensagens sintéticas em PT-PT, redigidas diretamente por IA (sem gerador) e anotadas segundo o protocolo 2.0.0. Descrição, processo de criação, distribuições, estado de validação e limitações: [`docs/DATASET_CARD.md`](../../docs/DATASET_CARD.md).
+510 mensagens sintéticas em PT-PT, redigidas diretamente por IA (sem gerador) e anotadas segundo o protocolo 2.1.0. Descrição, processo de criação, distribuições, estado de validação e limitações: [`docs/DATASET_CARD.md`](../../docs/DATASET_CARD.md).
 
 | Ficheiro | Conteúdo |
 | --- | --- |
@@ -16,4 +16,4 @@
 - `Oracle().query(ids)`: etiquetas da *pool*, só para ids selecionados;
 - `load_gold("seed_stock" | "validation")` / `load_gold("test", unlock_test=True)`: só para memória inicial e avaliação.
 
-Estado: **candidato**. A validação humana independente está pendente (T04) e o teste não está congelado. Estes ficheiros não são gerados por código: editá-los é criar uma nova versão do dataset, documentada em `docs/DECISIONS.md`, seguida de `python -m responsible_receivables_agent.dataset build`.
+Estado: **congelado** desde 2026-10-20 (D18; `test_frozen: true`). Auditado por IA e com os casos de fronteira decididos pelo responsável do projeto; sem dupla anotação humana (desvio declarado). Estes ficheiros não são gerados por código e não se alteram durante E1/E2. Qualquer correção exige uma nova versão do dataset, documentada em `docs/DECISIONS.md`. Com `dataset.FROZEN`, `build` só regenera `manifest.json` e nunca reescreve `splits.json`.

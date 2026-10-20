@@ -188,6 +188,21 @@ Convenções: **Estado** ∈ `Adotada` (em vigor), `Adotada — a validar` (pres
 - **Impacto:** protocolo 1.0.0 → 2.0.0; dataset 1.0.0-candidate → 2.0.0-candidate; T03 (refeita), T04, T09, T12, T16–T18.
 - **Estado:** Adotada.
 
+## D18 — Correções após a auditoria por IA, RV3 para adiamentos indeterminados e congelamento do dataset (v2.1.0)
+
+- **Data:** 2026-10-20.
+- **Gatilho (13.3 a):** lacuna do guia, identificada na auditoria `docs/audits/DATASET_AI_REVIEW_V2.md` (revisão cega das 510 mensagens por Claude Opus 5.5). O teste nunca foi desbloqueado nem usado para experiências; nenhum modelo foi executado. As etiquetas do teste foram lidas só para auditar o dataset ainda não congelado.
+- **Decisões do responsável do projeto** (revisão humana dos casos indicados, não dupla anotação):
+  1. **RV2, critério do valor (esclarecimento, sem mudança de etiquetas):** quando o cliente identifica a fatura do caso como paga e indica data e meio («paguei a FT-632 a 5 de outubro, por MB Way»), a alegação é completa: `PAYMENT_CLAIM` sem RV2. Resolve a contradição entre a nota histórica de GAP-02 («"a fatura" sozinha não basta») e o protocolo 4.2. Confirmado em RRA-0288 e RRA-0440; abrange também RRA-0141, RRA-0213 e RRA-0343.
+  2. **RV3 alargada (alteração normativa):** dispara também quando um pedido de plano adia o pagamento (total ou do remanescente) para um momento **indeterminado**, sem data nem prazo («peço que esperem», «quando chegar o donativo»). Prazos relativos («daqui a uma semana», «daqui a um mês», «60 dias após o visto») não disparam por este critério; medem-se pelo limiar dos 6 meses. Fronteira 3.3: pedido de espera sem data → `PAYMENT_PLAN_REQUEST` (sem pedido → `OTHER_OR_UNCLEAR`, como antes).
+  3. **Etiquetas alteradas:** RRA-0347 (pool) `PAYMENT_PLAN_REQUEST` + RV3 (antes sem revisão); RRA-0264 (pool) `PAYMENT_CLAIM` + RV3 (antes sem revisão); RRA-0351 (pool) `OTHER_OR_UNCLEAR` → `PAYMENT_CLAIM` + RV2; RRA-0490 (teste) `OTHER_OR_UNCLEAR` → `INVOICE_DISPUTE` + RV1. RRA-0228 mantém-se sem RV3 (prazo relativo). Registos em `adjudications.jsonl`.
+  4. **Congelamento:** o dataset passa a 2.1.0 e o teste fica congelado (`test_frozen: true`). `splits.json` mantém-se **exatamente** como estava. Recalcular a divisão com as etiquetas corrigidas trocaria 39 dos 120 casos de teste, por isso a divisão deixa de ser re-derivada das etiquetas e fica protegida pelo *hash* no manifesto. `build` deixa de reescrever `splits.json` (`dataset.FROZEN`).
+- **Alternativas:** (a) recalcular a divisão (rejeitada: altera o teste depois de as suas etiquetas terem sido lidas na auditoria); (b) adiar o congelamento até à dupla anotação humana com κ (rejeitada pelo responsável do projeto).
+- **Desvio declarado ao protocolo 8.2(7):** o teste é congelado **sem** dupla anotação humana nem κ de Cohen ≥ 0,70. A validação consistiu em: auditoria cega por IA, do mesmo modelo autor (concordância IA–IA de 99,2 % na classe, que não é validação independente), e decisão humana do responsável sobre os casos divergentes ou de fronteira acima. As restantes adjudicações provisórias do autor ficam congeladas tal como estão. Limitação a reportar nos resultados e na dissertação.
+- **Impacto nas experiências:** E1 — 2 alterações de classe (1 no teste: +1 `INVOICE_DISPUTE`, −1 `OTHER_OR_UNCLEAR`). E2 — 4 casos passam a precisar de revisão (1 no teste). A estratificação classe × revisão por conjunto deixa de ser exatamente a do algoritmo; os mínimos do teste continuam cumpridos (`dataset check`).
+- **Impacto:** protocolo 2.0.0 → 2.1.0; dataset 2.0.0-candidate → 2.1.0 (congelado); T04 (fechada com este desvio), T05 em diante.
+- **Estado:** Adotada.
+
 ---
 
 ## Divergências e esclarecimentos face aos documentos de partida
@@ -228,16 +243,17 @@ As lacunas abaixo foram identificadas **pelo assistente de IA durante a redaçã
 | ID | Estado em 2.0.0 |
 | --- | --- |
 | GAP-01 | Incorporada (3.1, 3.3): PP exige data até 30 dias após `received_date` e sem pedido de aceitação. |
-| GAP-02 | Incorporada (4.2, critérios de RV2). |
+| GAP-02 | Incorporada (4.2, critérios de RV2). Esclarecida em 2.1.0 (D18): identificar a fatura do caso como paga conta como valor total; a nota histórica «"a fatura" sozinha não basta» deixa de se aplicar quando a mensagem identifica a fatura. |
 | GAP-03 | Incorporada (3.4, fronteira). |
 | GAP-04 | Incorporada (secção 3, unidade anotada). |
 | GAP-05 | Incorporada (4.2, RV3: prazo desde `received_date`). |
 | GAP-06 | Incorporada (4.2), sem a parte de RV4, que foi retirada. |
 | GAP-07 | Mantida: o dataset 2.0.0 continua sem auto-correções; um pagamento falhado explicado na mensagem não é contradição (3.6, regra 3). |
 | GAP-08 | Obsoleta: `insufficient_information` deixou de existir. |
-| GAP-09 | **Continua aberta**; os casos continuam excluídos do dataset 2.0.0. |
+| GAP-09 | **Continua aberta**; os casos continuam excluídos do dataset 2.0.0 e 2.1.0. |
+| GAP-10 | Nova (auditoria de 2026-10-20): pedido de espera ou adiamento sem data nem prazo. Resolvida em 2.1.0 (D18): `PAYMENT_PLAN_REQUEST` com RV3. |
 
-Os casos ambíguos do dataset 2.0.0 estão em `data/dataset/adjudications.jsonl` (decisões **provisórias** do autor, a confirmar ou corrigir na T04).
+Os casos ambíguos estão em `data/dataset/adjudications.jsonl`. Os marcados «Decisão do responsável do projeto (D18)» foram decididos por um humano; os restantes são decisões provisórias do autor (IA), congeladas tal como estão em 2.1.0.
 
 ## Registo de alterações ao protocolo
 
@@ -245,6 +261,7 @@ Os casos ambíguos do dataset 2.0.0 estão em `data/dataset/adjudications.jsonl`
 | --- | --- | --- | --- | --- | --- |
 | 1.0.0 | 2026-10-18 | Criação (T02) | — | — | — |
 | 2.0.0 | 2026-10-19 | Complexidade desproporcionada do dataset candidato (D17) | RV4 retirada; `risk_flags` retiradas; `action_policy` com 2 perfis decididos pelo *gate*; critérios objetivos de RV2/RV3 e fronteira PP/PR (30 dias); unidade de divisão = cliente; esquema mínimo do dataset; REF15 → REF16 | Revisão do dataset 1.0.0 (sem piloto, sem validação, sem teste) | `protocol.json` 54200902… → c1ed7180… |
+| 2.1.0 | 2026-10-20 | Lacuna do guia identificada na auditoria por IA (D18) | RV3 também para adiamento indeterminado (sem data nem prazo); fronteira 3.3 para pedido de espera sem data; critério de valor de RV2 esclarecido (fatura identificada = totalidade) | Casos da *pool* (RRA-0347, RRA-0264) e auditoria; sem piloto; teste nunca desbloqueado | `protocol.json` c1ed7180… → d05aa9c9… |
 
 ## Registo *go/no-go* do piloto (T05)
 

@@ -47,7 +47,7 @@ uv run --locked mypy src tests
 
 ## Dataset (T03)
 
-Dataset estático de 510 mensagens sintéticas PT-PT em `data/dataset/` (v2.0.0-candidate, esquema mínimo, D17). Descrição, estado de validação e limitações: [`docs/DATASET_CARD.md`](docs/DATASET_CARD.md).
+Dataset estático de 510 mensagens sintéticas PT-PT em `data/dataset/` (v2.1.0, congelado, esquema mínimo, D17/D18). Descrição, estado de validação e limitações: [`docs/DATASET_CARD.md`](docs/DATASET_CARD.md).
 
 ```powershell
 uv run --locked python -m responsible_receivables_agent.dataset check   # esquema, regras, divisões, leakage, hashes; mostra contagens
@@ -67,7 +67,7 @@ pyproject.toml  uv.lock              dependências e lock reprodutível (uv)
 
 ## Estado atual
 
-T01–T02 concluídas (protocolo revisto para 2.0.0 em D17). T03 (dataset estático anotado, divisões
-candidatas, manifesto) reconstruída de raiz com esquema mínimo e a aguardar revisão. A validação
-humana independente do dataset (T04) está pendente e o teste não está congelado. Ainda não existe
-agente, LLM nem lógica de negócio.
+T01–T02 concluídas (protocolo revisto para 2.0.0 em D17 e para 2.1.0 em D18). T03 (dataset estático
+anotado, divisões, manifesto) reconstruída com esquema mínimo, auditada por IA e **congelada** em D18
+(`test_frozen: true`). A dupla anotação humana com κ (T04) não foi feita: desvio declarado em D18.
+Ainda não existe agente, LLM nem lógica de negócio.
