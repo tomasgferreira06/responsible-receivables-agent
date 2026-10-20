@@ -55,6 +55,22 @@ uv run --locked python -m responsible_receivables_agent.dataset check   # esquem
 
 `build` reescreve `splits.json` e `manifest.json`; só se usa ao criar uma nova versão do dataset.
 
+## Classificador Llama local (T05.1)
+
+`src/responsible_receivables_agent/classifier.py`: classificador zero-shot de uma classe principal, via API local do Ollama (sem rede externa nem chaves). Saída `{"message_label": <uma das 5 classes>}`; sem `needs_additional_review` nem `review_reasons` (tarefas posteriores).
+
+```powershell
+ollama serve                      # se ainda não estiver a correr
+ollama list                       # deve listar llama3.2:latest
+uv run --locked python -m responsible_receivables_agent.classifier --message "Pagamos na sexta-feira."
+```
+
+- **Entrada:** exatamente os 7 campos de `cases.jsonl`; qualquer outra chave (p. ex. etiquetas gold) é rejeitada. Só `invoice_id`, `pending_amount_eur`, `due_date`, `received_date` e `message_text` entram no prompt; o texto vai como string JSON, marcado como dados não fiáveis.
+- **Configuração** (`OllamaConfig`): `llama3.2:latest`, `temperature=0`, `num_ctx=4096`, `num_predict=32`, `seed=0`, timeout 120 s, saída estruturada (JSON schema com enum). `latest` é mutável: `--expected-digest a80c4f17acd5` aborta se o modelo instalado for outro. O resultado inclui latência, digest e opções.
+- **Falhas:** `OllamaUnavailable`, `OllamaTimeout`, `InvalidModelOutput`; nunca se devolve uma classe por defeito.
+- **Limitações:** zero-shot, uma chamada por caso, sem cache nem votos; o smoke test valida a integração técnica, não o desempenho semântico (não avaliado na validação nem no teste).
+- **Falta para a T05.2:** interface LLM com mock/replay, cache de respostas, registo de execuções, piloto zero-shot nas 60 mensagens de validação e nota *go/no-go*.
+
 ## Organização
 
 ```text
@@ -70,4 +86,4 @@ pyproject.toml  uv.lock              dependências e lock reprodutível (uv)
 T01–T02 concluídas (protocolo revisto para 2.0.0 em D17 e para 2.1.0 em D18). T03 (dataset estático
 anotado, divisões, manifesto) reconstruída com esquema mínimo, auditada por IA e **congelada** em D18
 (`test_frozen: true`). A dupla anotação humana com κ (T04) não foi feita: desvio declarado em D18.
-Ainda não existe agente, LLM nem lógica de negócio.
+T05.1 (classificador Llama local via Ollama, sem avaliação) implementada. Ainda não existe agente nem lógica de negócio.
